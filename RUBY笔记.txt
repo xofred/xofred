@@ -1,0 +1,150 @@
+输出篇
+  print, puts, p
+    puts和p会输出后自动换行,例如输出多个字符串时，每个字符串后都会换行
+    print,puts可以输出特殊字符,p遇到特殊字符作也是直接输出
+    p可以清楚知道输出的是什么对象，例如 p "100" 同 p 100 的输出
+
+  单引号与双引号
+    单引号除了 "\'" "\\" ，其他特殊字符例如 "\n" 不作解释直接输出 
+
+  方法
+    若括号里面内容作为被方法调用的参数，括号跟方法名之间不留空格
+
+  打印中文
+    rb文件最前面加上 #encoding: utf-8
+
+  数学函数
+    rb文件最前面加上 include Math, 或者Math.数学函数
+
+  注释
+    # 单行 
+    =begin 
+    多行   
+    =end
+
+  建立Hash
+    hash1 = {"key1" => "value1", "key2" => "value2"} #注意Hash没有顺序
+  或者
+    hash2 = {k1:"v1", k2:"v2"}
+
+  用正则表达式匹配字符串
+    /匹配/ == "待匹配字符串" #是否完全相等，若匹配返回匹配的开始位置（索引从0开始），不匹配返回nil，下同
+    /匹配/ =~ "待匹配字符串" #是否含有//里面的内容
+    /匹配/i =~ "字符串" #不区分大小写
+
+  read同gets
+    file.read读取整个文本
+    file.gets读取文本一行
+
+  变量
+    局部变量：小写字母或_开头
+    全局变量：$开头
+
+  常数
+    大写字母开头
+
+  equal?, ==, eql?
+    equal?判断两者是否同一个对象
+    ==判断对象持有的值是否相等
+    eql?除数值类其余同==
+
+  真假值
+    真：false与nil以外的所有对象
+    假：false与nil
+    另外，返回真假值的方法习惯在最后加?
+
+  逻辑运算符
+    &&, ||, !分别等同and, or, not,但前三个优先级高
+
+  ..与...
+    ..包含结尾，例如1..4表示1,2,3,4
+    ...不包含结尾，例如1...4表示1,2,3
+
+出错处理 rescue
+def num2star
+  star = ""
+  print "输入整数（人有多大胆，地有多大产）："
+  str = gets
+  str.chomp!
+  begin
+    num = Integer(str)
+    num.times{ |i| 
+      star << "*"
+    }
+    print "卫星数量如下：\n", star, "\n"
+  rescue
+    num = 0
+    print "刚输入的不是整数，无法计算\n"
+  end
+end
+num2star
+
+数组篇
+  sa = %w(assasin hitman godfather)
+  sa.each{ |i| # i就是元素 
+    # do sth 
+  }
+  sa.each_with_index{|e, i| # 先元素，后索引
+    print "第", i+1, "个元素是", e, "\n"
+  }
+  =begin 以下为输出结果
+  第1个元素是assasin,
+  第2个元素是hitman,
+  第3个元素是godfather
+  =end
+
+字符串篇
+  长度
+    "abcde".length
+
+  判断是否为空
+    "".empty? # true
+    " ".empty? # false
+
+  把字符串分割为数组
+  column = str.split(/ /) # 以空格为界分割
+
+  删除换行符
+    line.chomp!
+
+  查找
+  str = "ooxx"
+  str.index("oo") # 从左边开始找，返回匹配位置
+  str.rindex("xx") # 从右边开始找
+  str.include?("ox") # 是否包含
+  
+  截取（同数组的方法一样，返回截取部分）
+  str.slice!(n)
+  str.slice!(n..m)
+  s.slice!(n, len)
+  
+  清除前后空格
+  " o o x x ".strip # 变成"o o x x"
+
+  大小写
+  str.upcase!
+  str.downcase!
+
+  替换
+  p "abcde".tr("b", "B")
+  p "abcde".tr("bc", "BC")
+  p "abcde".tr("b-d", "B-D")
+
+  转换字码
+  require "nkf"
+  big5_str = "假装是繁体中文的简体中文"
+  utf8_str = NKF.nkf("-E -w -xm0", big5_str)
+
+vim常用命令
+  :sh 新建一个终端
+  :tabedit 文件名 新建一个标签
+  gt 切换标签
+  /查找内容 查找 n 下一个 N 上一个
+  G 文章结尾 gg 文章开头
+  :reg 查看寄存器
+  m标记（例如想MARK def，md `d即可返回） 
+  :set filetype=ruby 高亮ruby语法
+  "+p 粘贴外部东东
+ubuntu常用命令
+  解压及安装
+  
