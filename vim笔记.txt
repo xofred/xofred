@@ -50,6 +50,6 @@ set wrap		      自动换行
 syntax enable		      语法高亮		      
 set incsearch		      即时搜索反馈
 set showcmd		      在右下角显示行号，字符数，字节数等信息
-colorscheme bensday	      
+colorscheme bensday	      配色方案 
 set softtabstop=2	      Tab缩进长度
 set smartindent shiftwidth=2  自动缩进
