@@ -135,16 +135,4 @@ num2star
   big5_str = "假装是繁体中文的简体中文"
   utf8_str = NKF.nkf("-E -w -xm0", big5_str)
 
-vim常用命令
-  :sh 新建一个终端
-  :tabedit 文件名 新建一个标签
-  gt 切换标签
-  /查找内容 查找 n 下一个 N 上一个
-  G 文章结尾 gg 文章开头
-  :reg 查看寄存器
-  m标记（例如想MARK def，md `d即可返回） 
-  :set filetype=ruby 高亮ruby语法
-  "+p 粘贴外部东东
-ubuntu常用命令
-  解压及安装
-  
+ 

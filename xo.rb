@@ -317,20 +317,5 @@ end
 print_ruby_lib(ARGV[0])
 
 =end
-def days_ary
-  d_first = Date.new(2012, 8, 1)
-  d_last = Date.new(2012, 8, -1)
-  p "#{d_first.year} #{d_first.strftime("%B")}"
-  p '周日 周一 周二 周三 周四 周五 周六'
-  fday = d_first.mday
-  lday = d_last.mday
-  i = 0
-  unless i > lday
-    ary = []
-    ary << d_first + i
-    i += 1
-  end
-  return ary
-end
-p days_ary
-#主目录
+
+

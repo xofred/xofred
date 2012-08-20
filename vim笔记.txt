@@ -1,0 +1,55 @@
+vim帮助手册目录		:help usr_toc.txt
+编辑vim配置文件		:(tab)edit ~/.vimrc(~代表系统主目录)
+:上一条命令		上箭头
+:命令提示		Tab键(例如:help pattern<Tab>)
+:查看与之有关全部命令	CTRL-D(例如：help pattern<CTRL-D>)
+退出			:q(例如退出帮助手册)
+
+移动到括号的位置	%
+光标移动到行首		Home键(或^)
+光标移动到行尾		End键(或$)
+回到文本头		H(gg)
+回到文本中间		M
+回到文本尾		L(G)
+向上滚屏		CTRL-Y(CTRL-B滚一屏)
+向下滚屏		CTRL-E(CTRL-F滚一屏)
+
+搜索			/(或?)搜索的内容，/^搜索开头,/搜索结尾$
+下(上)一个搜索		n(N)
+(不)显示行号		:set (no)number
+搜索(不)忽略大小写	:set (no)ignorecase
+(不)高亮搜索		:set (no)hlsearch
+
+标记			m(例如想标记def，md，然后`d即可返回) 
+查看所有标记		:marks
+
+撤销			u
+重复			CTRL-R
+
+v			<在可视模式下>
+复制(整行)		y(yy)
+剪切(剪切整行)		d(dd)
+粘帖到后(前)面		p(P)
+复制，剪切，粘帖到外部	"+y, "+d, "+p
+
+大写<->小写		~
+
+水平分割		:split 文件名(没有文件名就分割自身)
+垂直分割		:vsplit
+切换不同分割		CTRL-W
+关剩一个窗口		:only
+(强制)全部关闭		:qall(!)
+
+全部替换		:%s/查找内容/替换内容/g
+自动补完		CTRL-P
+	
+实用配置选项
+set number		      显示行号
+set ignorecase smartcase      搜索含大写必须完全匹配，只有小写等同于ignorecase
+set wrap		      自动换行
+syntax enable		      语法高亮		      
+set incsearch		      即时搜索反馈
+set showcmd		      在右下角显示行号，字符数，字节数等信息
+colorscheme bensday	      
+set softtabstop=2	      Tab缩进长度
+set smartindent shiftwidth=2  自动缩进

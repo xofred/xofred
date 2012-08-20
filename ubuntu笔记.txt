@@ -1,0 +1,19 @@
+创建目录	mkdir
+复制文件	cp
+剪切		mv		
+
+访问隐藏文件	
+  .文件名
+
+更新出错
+  sudo apt-get update
+
+在文件中查找和替换命令
+1、查找
+find /home/guo/bin -name \*.txt | xargs grep 'jdbc'
+查找 /home/guo/bin 目录下所有后缀为.txt 的文件(PS:\* 转义* 为统配符)，通过 xargs 命令传递给 grep 作为文件参数
+grep 'jdbc' 所搜显示文件中所有包含 jdbc字符串的行
+2、替换
+find /home/guo/bin -name \*.txt | xargs sed -i 's/@/1/g'
+查找 /home/guo/bin 目录下所有后缀为.txt 的文件(PS:\* 转义* 为统配符)，通过 xargs 命令传递给 sed 作为文件参数
+sed 命令搜索文件中的＠字符都替换为1字符。(-i 直接修改当前文本，后面的g表示全部替换，而不是只替换第一个)
