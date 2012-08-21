@@ -1,0 +1,17 @@
+<ul>
+<% @events.each do |event| %>
+  <li>
+  <%= event.name %>
+  <%= link_to 'Show', :controller => 'events', :action => 'show', :id => event %>
+  <%= link_to 'Edit', :controller => 'events', :action => 'edit', :id => event %>
+  <%= link_to 'Delete', :controller => 'events', :action => 'destroy', :id => event %>
+  </li>
+<% end %>
+</ul>
+<%= link_to 'New event', :controller => 'events', :action => 'new' %>
+這個View迭代了@events陣列並顯示內容跟超連結，有幾件值得注意的事情：
+
+<%和<%=不太一樣，前者只執行不輸出，像用來迭代的each和end這兩行就不需要輸出。而後者<%= 裡的結果會輸出給瀏覽器。
+
+常见错误
+    NoMethodError   方法名写错，或者没有定义该方法
