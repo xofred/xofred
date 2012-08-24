@@ -1,0 +1,35 @@
+linux下配置oracle 10G EM Database Console
+
+1、启动dbconsole
+ [oracle@devrfel501 ~]$ emctl start dbconsole
+如果提示：OC4J Configuration issue. /opt/oracle/product/10.2.0/oc4j/j2ee/OC4J_DBConsol，则说明没有配置或没有创建
+
+2、配置dbconsole
+ [oracle@devrfel501 ~]$ emca -config dbcontrol db
+
+3、查看dbconsole的状态和访问地址
+ [oracle@devrfel501 ~]$ emctl status dbconsole
+TZ set to PRC
+Oracle Enterprise Manager 10g Database Control Release 10.2.0.4.0
+Copyright (c) 1996, 2007 Oracle Corporation.  All rights reserved.
+https://devrfel501:5502/em/console/aboutApplication  #访问地址
+Oracle Enterprise Manager 10g is running.
+------------------------------------------------------------------
+Logs are generated in directory /opt/oracle/product/10.2.0/devrfel501_orcl/sysman/log
+
+4、删除数据库的 Database Control配置
+oracle@devrfel501 ~]$ emca -deconfig dbcontrol db
+ 
+5、常用的命令语法：
+emca -repos create创建一个EM资料库
+emca -repos recreate重建一个EM资料库
+emca -repos drop删除一个EM资料库
+emca -config dbcontrol db配置数据库的 Database Control
+emca -deconfig dbcontrol db删除数据库的 Database Control配置
+emca -reconfig ports 重新配置db control和agent的端口
+emctl start console启动EM console服务，使用前需要先设置ORACLE_SID环境变量
+emctl stop console停止EM console服务，使用前需要先设置ORACLE_SID环境变量
+注：通过查看$ORACLE_HOME/install/portlist.ini 文件可以知道当前dbcontrol正在使用的端口，默认dbcontrol http端口1158，agent端口3938。如果要重新配置端口，可以使用如下命令：
+emca -reconfig ports -dbcontrol_http_port 1159
+emca -reconfig ports -agent_port 3939
+使用命令行工具emctl可以启动/停止console服务，察看服务状态等。
