@@ -33,3 +33,42 @@ emctl stop console停止EM console服务，使用前需要先设置ORACLE_SID环
 emca -reconfig ports -dbcontrol_http_port 1159
 emca -reconfig ports -agent_port 3939
 使用命令行工具emctl可以启动/停止console服务，察看服务状态等。
+
+Ora-12514
+OracleOraDb10g_home1TNSListener：
+ 该服务对应 %Oracle_Hoem\bin   TNSLSNR.EXE
+若该服务未启动，将会导致Oracle错误- Ora-12514：TNS：无监听程序。
+
+OracleServiceORACLE:
+ 若该服务未启动，将会导致Oracle错误- Ora-12514：TNS：监听程序当前无法识别链接描述符中请求的服务。
+但是，启动了该服务也有可能导致该错误。解决方法如下：
+  
+ 打开：%Oracle_Hoem%/network/admin/listener.ora文件
+ 在
+  SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC =
+      (SID_NAME = PLSExtProc)
+      (ORACLE_HOME = D:\Oracle\Oracle10g)
+      (PROGRAM = extproc)
+    ) 
+ 后面添加：  
+    (SID_DESC =
+       (GLOBAL_DBNAME = ORACLE)
+       (ORACLE_HOME = D:\Oracle\Oracle10g)  
+       (SID_NAME = ORACLE)
+      )  
+ 
+  最后变成：
+ SID_LIST_LISTENER =
+   (SID_LIST =
+     (SID_DESC =
+       (SID_NAME = PLSExtProc)
+       (ORACLE_HOME = D:\Oracle\Oracle10g)
+       (PROGRAM = extproc)
+     ) (SID_DESC =
+        (GLOBAL_DBNAME = ORACLE)
+        (ORACLE_HOME = D:\Oracle\Oracle10g)  
+        (SID_NAME = ORACLE)
+       )
+   )
