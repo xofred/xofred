@@ -34,6 +34,9 @@ emca -reconfig ports -dbcontrol_http_port 1159
 emca -reconfig ports -agent_port 3939
 使用命令行工具emctl可以启动/停止console服务，察看服务状态等。
 
+ora-12170
+Windows 2008默认启用了防火墙，关闭即可。
+
 Ora-12514
 OracleOraDb10g_home1TNSListener：
  该服务对应 %Oracle_Hoem\bin   TNSLSNR.EXE
