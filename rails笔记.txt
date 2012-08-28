@@ -1,17 +1,52 @@
-<ul>
-<% @events.each do |event| %>
-  <li>
-  <%= event.name %>
-  <%= link_to 'Show', :controller => 'events', :action => 'show', :id => event %>
-  <%= link_to 'Edit', :controller => 'events', :action => 'edit', :id => event %>
-  <%= link_to 'Delete', :controller => 'events', :action => 'destroy', :id => event %>
-  </li>
-<% end %>
-</ul>
-<%= link_to 'New event', :controller => 'events', :action => 'new' %>
-這個View迭代了@events陣列並顯示內容跟超連結，有幾件值得注意的事情：
-
-<%和<%=不太一樣，前者只執行不輸出，像用來迭代的each和end這兩行就不需要輸出。而後者<%= 裡的結果會輸出給瀏覽器。
-
 常见错误
     NoMethodError   方法名写错，或者没有定义该方法
+    找不到路由	    检查出错view的url参数（例如单复数），参考rake routes
+
+Layout
+    Layout可以用來包裹樣板，讓不同樣板共用相同的HTML開頭和結尾部分。當Rails要顯示一個樣板給瀏覽器時，它會將樣板的HTML放到Layout的HTML之中。預設的Layout檔案是app/views/layouts/application.html.erb，其中yield就是會被替換成樣板的地方。所有的樣版預設都會套這個Layout。我們會再 Action View一章中介紹如何更換不同Layout。
+
+現在，讓我們修改Layout中的<title>：
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title><%= @page_title || "Event application" %></title>
+  <%= stylesheet_link_tag    "application" %>
+  <%= javascript_include_tag "application" %>
+  <%= csrf_meta_tags %>
+</head>
+<body>
+
+<%= yield %>
+
+</body>
+</html>
+如此我們可以在show Action中設定@page_title的值：
+
+def show
+  @event = Event.find(params[:id])
+  @page_title = @event.name
+end
+這樣的話，進去show頁面的title就會是活動名稱。其他頁面因為沒有設定@page_title，就會是”Event application”。
+
+
+<%与<%=
+    <%和<%=不太一樣，前者只執行不輸出，像用來迭代的each和end這兩行就不需要輸出。而後者<%= 裡的結果會輸出給瀏覽器。
+
+
+simple_format
+<%= @event.name %>
+<%= simple_format(@event.description) %>
+ 
+<p><%= link_to 'Back to index', :controller => 'events', :action => 'index' %></p>
+    其中simple_format是一個內建的View Helper，它的作用是可以將換行字元\n置換成<br />，有基本的HTML換行效果。
+
+
+变量单复数含义
+def destroy
+  @event = Event.find(params[:id])
+  @event.destroy
+
+  redirect_to :action => :index
+end
+    Rails的程式風格非常注重變數命名的單數複數，像上述的index Action中是用@events複數命名，代表這是一個群集陣列。其他則是用@event單數命名。
