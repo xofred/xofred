@@ -1,8 +1,167 @@
-常见错误
+====Rails 指令
+
+generate 可縮寫為 g
+
+產生各種不同類型的檔案，例如
+
+rails generate model person
+rails g controller people
+console 可縮寫為 c
+
+開啟一個 Rails 主控台
+
+rails console
+rails c
+預設的環境是 developement，如果需要指定環境，請多輸入環境名稱即可，例如：
+
+rails c production
+Rails也有提供沙箱模式(Sandbox)，任何資料庫的修改都會在離開時回復(原理是資料庫Transaction)：
+
+rails c --sandbox
+在主控台中輸入exit就會離開。
+
+server 可縮寫為 s
+
+開啟一個 Rails 伺服器
+
+rails s
+預設是使用 Port 3000 和 development 環境，如果需要指定：
+
+rails s -p 4000 -e production
+new
+
+建立一個新 Rails 專案
+
+rails new my_app
+將會建立一個叫做 MyApp 的 Rails 專案在 ./my_app 目錄下。它有一些參數可以使用
+
+--database=DATABASE 可以改變 config/database.yml 的預設值
+--skip-prototype 可以不產生 prototype.js 檔案
+--skip-git 可以忽略為了 Git 版本控制而產生的 .gitignore 和 .gitkeep 檔案
+其他說明可以輸入 rails 看到全部的指令。
+
+
+====Rails 啟動與應用程式設定
+
+應用程式設定放在config/application.rb。注意到如果你有任何修改，無論在什麼模式下，都必須重新啟動 Rails 設定才會生效。
+
+
+====自定义出错页面
+
+# Full error reports are disabled and caching is turned on
+ config.consider_all_requests_local       = false
+config.action_controller.perform_caching = true
+不同於 development，如果在 production 環境出現例外錯誤，不會顯示程式 call stack 訊息，而是回傳 public/500.html 頁面。
+
+
+====Connecting to Oracle from Ruby on Rails
+1.Install the Ruby/Oracle Call Interface (OCI8) library
+    sudo gem install ruby-oci8
+2.A simple test of your Ruby OCI8 driver
+    set oracle_sid=xe
+    ruby -r oci8 -e "OCI8.new('hr', 'password').exec('SELECT * FROM jobs ORDER BY 1') {|r| puts  r.join}"  
+3. Rails Configuration
+
+The parameters used by Rails to connect to a database are stored in config/database.yml within your Rails application directory. The following example references the host xe, which corresponds to an entry in tnsnames.ora. Three different schemas are used, as specified by the differing usernames.
+     
+development:
+  adapter: oci
+  host:  
+                              
+xe
+  username:  
+                              
+development
+  password:  
+                              
+password
+test:
+  adapter: oci
+  host:  
+                              
+xe
+  username:  
+                              
+test
+  password:  
+                              
+password
+production:
+  adapter: oci
+  host:  
+                              
+xe
+  username:  
+                              
+production
+     password:  
+                              
+password
+    
+It is also possible to use Oracle Easy Connect Naming with the Ruby OCI8 driver. Replace the SID in the host field with an Oracle Easy connect string as shown below:
+     
+development:
+  adapter: oci
+  host:  
+                              
+//server:port/instance_name
+  username:  
+                              
+development
+     password:  
+                              
+password  
+
+ 
+====Bundler 與 Gemfile 設定檔
+    
+要使用的 Gems，都必須宣告在 Gemfile 設定檔中，沒寫在裡面的話，就算手動 require 也找不到。
+
+安裝及更新 Gems
+如果你修改了這個檔案，請執行 bundle install，這樣 Bundler 就會檢查並安裝這些函式庫
+
+打包 Gems
+執行以下指令，會將所有用到的 Gems 打包進 vendor/cache 目錄。如此執行 bundle install 時就不會連線到 http://rubygems.org 下載套件。
+
+bundle package
+什麼時候需要用到這個功能呢? 例如你希望佈署的時候避免外部連線
+
+
+====名稱慣例
+Model 命名
+
+類別名稱使用大寫、單數，沒有底線。而檔名使用小寫、單數，用底線。資料庫表格名稱用小寫且為複數。例如：
+
+資料庫表格 line_items
+檔名 app/models/line_item.rb
+類別名稱 LineItem
+
+Controller 命名
+
+如果使用典型路徑：
+
+網址 http://../store/list
+檔名 app/controllers/store_controller.rb
+類別名稱 StoreController
+方法名稱 list
+Layout 檔案 app/views/layouts/store.html.erb
+Template 檔案 app/views/store/list.html.erb
+如果使用 RESTful 路徑，則 Controller 名稱必為複數，方法名稱依照 RESTful 的慣例有七個 index, show, new, edit, update, create, destroy。
+
+View 命名
+
+例如一個叫做 People 的 controller，其中的 index action：
+
+檔名 app/views/people/index.html.erb (或 .builder or .rjs)
+Helper 名稱 module PeopleHelper
+檔名 app/helpers/people_helper.rb
+
+====常见错误
     NoMethodError   方法名写错，或者没有定义该方法
     找不到路由	    检查出错view的url参数（例如单复数），参考rake routes
 
-Layout
+
+====Layout设定HTML的默认Title
     Layout可以用來包裹樣板，讓不同樣板共用相同的HTML開頭和結尾部分。當Rails要顯示一個樣板給瀏覽器時，它會將樣板的HTML放到Layout的HTML之中。預設的Layout檔案是app/views/layouts/application.html.erb，其中yield就是會被替換成樣板的地方。所有的樣版預設都會套這個Layout。我們會再 Action View一章中介紹如何更換不同Layout。
 
 現在，讓我們修改Layout中的<title>：
@@ -30,11 +189,11 @@ end
 這樣的話，進去show頁面的title就會是活動名稱。其他頁面因為沒有設定@page_title，就會是”Event application”。
 
 
-<%与<%=
+====html.erb中<%与<%=的区别
     <%和<%=不太一樣，前者只執行不輸出，像用來迭代的each和end這兩行就不需要輸出。而後者<%= 裡的結果會輸出給瀏覽器。
 
 
-simple_format
+====將換行字元\n置換成<br />
 <%= @event.name %>
 <%= simple_format(@event.description) %>
  
@@ -42,7 +201,7 @@ simple_format
     其中simple_format是一個內建的View Helper，它的作用是可以將換行字元\n置換成<br />，有基本的HTML換行效果。
 
 
-变量单复数含义
+====变量单复数含义
 def destroy
   @event = Event.find(params[:id])
   @event.destroy
