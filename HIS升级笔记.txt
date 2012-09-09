@@ -1,0 +1,29 @@
+secureCRT
+  连接
+  选ssh2
+  su -oracle(相当与WIN的CMD)
+  看ORACLE进程
+    ps -ef|grep oracle
+
+
+oracle RAC
+  看状态
+    crs_stat -t
+  虚拟IP
+    host要配两个
+  VIP漂移(通常由于网络中断)
+    svrctl start nodeapps -n (offline的节点名字)
+  ASM
+    oracle 10g需要单独启动ASM实例
+  Dataguard
+    数据库和操作系统版本要与生产库一致
+    有物理和逻辑两种，后者可读写
+    容灾端
+      set file_management=auto #当生产库加入数据文件时自动同步
+
+维护监控
+  看系统
+    top
+  oracle日志文件
+    在bdump目录下
+  加数据文件用语句，注意目录
