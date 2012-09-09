@@ -156,6 +156,51 @@ View 命名
 Helper 名稱 module PeopleHelper
 檔名 app/helpers/people_helper.rb
 
+
+====Routing路由
+routes.rb中，越上面越優先。是如果有網址同時符合多個規則，會使用最上面的規則。
+
+雖然RESTful已經是設計Rails最常見的路徑模式，但是在一些特殊的情況、不符合CRUD模型的情結就不一定適用了，例如有多重步驟的表單(又叫作Wizard) 時，使用命名路由反而會比較簡潔，例如step1_path, step2_path, step3_path等。
+
+要設定網站的首頁，請設定：
+
+root :to => 'welcome#show'
+記得也要刪除public/index.html這個檔案
+
+----RESTful
+
+在config/routes.rb加入以下一行程式：
+
+resources :events
+如此就會自動建立四個命名路由(named routes)，搭配四個HTTP動詞，對應到七個Actions。它的實際作用，就如同以下的設定：
+
+get    '/events'          => "events#index",   :as => "events"
+post   '/events'          => "events#create",  :as => "events"
+get    '/events/:id'      => "events#show",    :as => "event"
+put    '/events/:id'      => "events#update",  :as => "event"
+delete '/events/:id'      => "events#destroy", :as => "event"
+get    '/events/new'      => "events#new",     :as => "new_event"
+get    '/events/:id/edit' => "events#edit",    :as => "edit_event"
+注意到這七個Action方法的名字，Rails是定好的，無法修改。
+
+----多層的Resources
+
+當一個Resource一定會依存另一個Resource時，我們可以套疊多層的Resources，例如以下是任務一定屬於在專案底下：
+
+resources :projects do
+  resources :tasks, :people
+end
+如此產生的URL Helper如project_tasks_path(@project)和project_task_path(@project, @task)，它的網址會如projects/123/tasks和projects/123/tasks/123。
+
+實務上不建議設計超過兩層
+
+----rake routes
+如果你不清楚這些路由設定到底最後的規則是什麼，你可以執行：
+
+rake routes
+這樣就會產生出所有URL Helper、URL 網址和對應的Controller Action都列出來。
+
+
 ====常见错误
     NoMethodError   方法名写错，或者没有定义该方法
     找不到路由	    检查出错view的url参数（例如单复数），参考rake routes
