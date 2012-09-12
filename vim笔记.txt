@@ -4,6 +4,7 @@ vim帮助手册目录		:help usr_toc.txt
 :命令提示		Tab键(例如:help pattern<Tab>)
 :查看与之有关全部命令	CTRL-D(例如：help pattern<CTRL-D>)
 退出			:q(例如退出帮助手册)
+设置语法类型		:set filetype=ruby
 
 移动到括号的位置	%
 光标移动到行首		Home键(或^)
