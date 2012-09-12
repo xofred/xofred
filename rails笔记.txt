@@ -201,6 +201,73 @@ rake routes
 這樣就會產生出所有URL Helper、URL 網址和對應的Controller Action都列出來。
 
 
+====Action Controller: 控制HTTP流程
+----產生Controller與Action
+    在Action方法中我們要處理request，基本上會做三件事情: 1. 收集request的資訊，例如使用者傳進來的參數 2. 操作Model來做資料的處理 3. 回傳response結果，這個動作稱作render
+
+----Render結果
+    在根據request資訊做好資料處理之後，我們接下來就要回傳結果給用戶。依照Rails慣例就是app/views/{controller_name}/{action_name}。如果找不到樣板檔案的話，會出現Template is missing的錯誤。
+    
+----Redirect
+
+如果Action不要render任何結果，而是要使用者轉向到別頁，可以使用redirect_to
+
+redirect_to :action => "show", :id => @event
+redirect_to :back 回到上一頁。
+注意，一個Action中只能有一個render或一個redirect_to。不然你會得到一個DoubleRenderError例外錯誤。
+
+----respond_to
+
+respond_to可以用來回應不同的資料格式。Rails內建支援格式包括有:html, :text, :js, :css, :ics, :csv, :xml, :rss, :atom, :yaml, :json等。如果需要擴充，可以編輯config/initializers/mime_types.rb這個檔案。
+
+如果你想要設定一個else的情況，你可以用:any：
+
+respond_to do |format|
+  format.html
+  format.xml { render :xml => @event.to_xml }
+  format.any { render :text => "WTF" }
+end
+
+----Flash訊息
+
+我們用Flash來傳遞訊息。它的用處在於redirect時，能夠從這一個request傳遞文字訊息到下一個request，例如從create Action傳遞「成功建立」的訊息到show Action。
+
+flash是一個Hash，其中的鍵你可以自定，常用:notice、:warning或:error等。例如我們在第一個Action中設定它：
+
+def create
+  @event = Event.create(params[:event])
+  flash[:notice] = "成功建立"
+  redirect_to :action => :show
+end
+那麼在下一個Action中，我們就可以在Template中讀取到這個訊息，通常我們會放在Layout中：
+
+<p><%= flash[:notice] %></p>
+使用過一次之後，Rails就會自動清除flash
+
+----Filters
+
+可將Controller中重複的程式抽出來，其中before_filter最為常用。
+
+before_filter
+
+before_filter最常用於準備跨Action共用的資料，或是使用者權限驗證等等：
+
+class EventsControler < ApplicationController
+  before_filter :find_event, :only => :show
+
+  def show
+  end
+
+  protected
+
+  def find_event
+    @event = Event.find(params[:id])
+  end
+  
+end
+每一個都可以搭配:only或:except參數。
+
+
 ====常见错误
     NoMethodError   方法名写错，或者没有定义该方法
     找不到路由	    检查出错view的url参数（例如单复数），参考rake routes
