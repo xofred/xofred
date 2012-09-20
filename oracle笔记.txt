@@ -34,6 +34,10 @@ emca -reconfig ports -dbcontrol_http_port 1159
 emca -reconfig ports -agent_port 3939
 使用命令行工具emctl可以启动/停止console服务，察看服务状态等。
 
+ora-00604
+问题：DBA权限帐号登录应用程序正常，普通用户报错
+解决：更换客户端ORACLE，7 -> 10
+
 ora-12170
 Windows 2008默认启用了防火墙，关闭即可。
 
