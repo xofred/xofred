@@ -1,0 +1,41 @@
+====启动RMAN
+
+在操作系统命令行输入
+rman TARGET /
+或者在RMAN提示符下输入CONNECT TARGET
+
+
+====显示当前RMAN配置
+
+SHOW ALL；
+修改前先复制粘帖一份，以便恢复配置或者用在另一个数据库
+
+
+==配置(备份至磁盘)
+
+--设备类型
+CONFIGURE DEFAULT DEVICE TYPE TO DISK;
+
+--备份类型
+CONFIGURE DEVICE TYPE DISK BACKUP TYPE TO COPY; # image copies
+
+--备份位置
+CONFIGURE CHANNEL DEVICE TYPE DISK FORMAT '/backup/ora_df%t_s%s_s%p'; 
+说明：The format specifier %t is replaced with a four byte time stamp, %s with the backup set number, and %p with the backup piece number.
+
+--自动备份控制文件和初始化文件
+CONFIGURE CONTROLFILE AUTOBACKUP ON;
+原理：RMAN can be configured to automatically back up the control file and server parameter file whenever the database structure metadata in the control file changes and whenever a backup record is added. The autobackup enables RMAN to recover the database even if the current control file, catalog, and server parameter file are lost.
+
+Because the filename for the autobackup uses a well-known format, RMAN can search for it without access to a repository, and then restore the server parameter file. After you have started the instance with the restored server parameter file, RMAN can restore the control file from an autobackup. After you mount the control file, the RMAN repository is available and RMAN can restore the datafiles and find the archived redo log.
+
+--控制文件自动备份格式
+CONFIGURE CONTROLFILE AUTOBACKUP FORMAT 
+  FOR DEVICE TYPE DISK TO 'ora_home/oradata/cf_%F';
+说明：By default, the format of the autobackup file for all configured devices is the substitution variable %F. This variable format translates into c-IIIIIIIIII-YYYYMMDD-QQ, where:
+
+IIIIIIIIII stands for the DBID.
+YYYYMMDD is a time stamp of the day the backup is generated
+QQ is the hex sequence that starts with 00 and has a maximum of FF
+
+====Setting Up a Flash Recovery Area for RMAN
