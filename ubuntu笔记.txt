@@ -1,14 +1,114 @@
-创建目录	mkdir
-复制文件	cp
-剪切		mv		
+----nautilus不绘制桌面了，鼠标右键没反应
 
-访问隐藏文件	
+在终端输入gnome-tweak-tool
+
+在Tweak Tool的"桌面" --> "由文件管理器处理桌面" --> 开启
+
+注意！点开启后桌面可能会假死，用字符终端(例如Ctrl+Alt+F1)登入重启
+
+
+----挂起后无法唤醒
+
+方法：
+一、打开终端在/etc/pm/sleep.d/建立20_custom-ehci_hcd文件
+sudo gedit /etc/pm/sleep.d/20_custom-ehci_hcd
+二、复制下面代码到文件里保存并退出
+#!/bin/sh
+#inspired by http://art.ubuntuforums.org/showpost...0&postcount=19
+#...and http://thecodecentral.com/2011/01/18...ot-working-bug
+# tidied by tqzzaa 
+VERSION=1.1
+DEV_LIST=/tmp/usb-dev-list
+DRIVERS_DIR=/sys/bus/pci/drivers
+DRIVERS="ehci xhci" # ehci_hcd, xhci_hcd
+HEX="[[:xdigit:]]"
+MAX_BIND_ATTEMPTS=2
+BIND_WAIT=0.1
+unbindDev() {
+echo -n > $DEV_LIST 2>/dev/null
+for driver in $DRIVERS; do
+DDIR=$DRIVERS_DIR/${driver}_hcd
+for dev in `ls $DDIR 2>/dev/null | egrep "^$HEX+:$HEX+:$HEX"`; do
+echo -n "$dev" > $DDIR/unbind
+echo "$driver $dev" >> $DEV_LIST
+done
+#for bus in $EHCI_BUSES; do
+echo -n $bus > /sys/bus/pci/drivers/ehci_hcd/unbind
+# done
+done
+}
+bindDev() {
+if [ -s $DEV_LIST ]; then
+while read driver dev; do
+DDIR=$DRIVERS_DIR/${driver}_hcd
+#for bus in $EHCI_BUSES; do
+echo -n $bus > /sys/bus/pci/drivers/ehci_hcd/bind
+#done
+while [ $((MAX_BIND_ATTEMPTS)) -gt 0 ]; do
+echo -n "$dev" > $DDIR/bind
+if [ ! -L "$DDIR/$dev" ]; then
+sleep $BIND_WAIT
+else
+break
+fi
+MAX_BIND_ATTEMPTS=$((MAX_BIND_ATTEMPTS-1))
+done
+done < $DEV_LIST
+fi
+rm $DEV_LIST 2>/dev/null
+chvt 1
+chvt 7
+}
+EHCI_BUSES="0000:00:1a.0 0000:00:1d.0"
+case "$1" in
+hibernate|suspend)
+unbindDev;;
+resume|thaw)
+bindDev;;
+esac
+三、改变20_custom-ehci_hcd文件权限
+sudo chmod 755 /etc/pm/sleep.d/20_custom-ehci_hcd
+四、重启
+
+
+----命令太长换行
+    
+挃令太长的时候,可以使用反斜杠 (\) 来跳脱[Enter]符号,使挃令连续到下一行。
+注意!反斜杠后就立刻接特殊字符,才能跳脱!
+
+
+----任务栏上的快捷方式无法删除 
+
+In gnome classic you must press both the Alt & Super keys at the same time while right-clicking on the panel/applet you wish to edit, move, or remove. (The Super key is typically the one with the Windows logo).
+
+
+----常用命令及参数
+
+ls -al 目录名		以详细信息显示该目录下的所有文件(不加目录名显示当前目录)
+[Ctrl]-d 		相当于exit
+
+man 命令		不懂问男人，操作和vim一样(例如翻页，查找)
+man -f 命令		显示相关命令，例如：
+
+administrator@ubuntu:~$ man -f ls
+ls (1)               - list directory contents
+LS (6)               - display animations aimed to correct users who accident...
+
+代号			代表内容
+1			用户在 shell 环境中可以操作的挃令戒可执行文件
+5			配置文件戒者是某些档案的格式
+8			系统管理员可用的管理挃令
+
+
+----访问隐藏文件	
   .文件名
 
-更新出错
+
+----更新出错
   sudo apt-get update
 
-在文件中查找和替换命令
+
+----在文件中查找和替换命令
 1、查找
 find /home/guo/bin -name \*.txt | xargs grep 'jdbc'
 查找 /home/guo/bin 目录下所有后缀为.txt 的文件(PS:\* 转义* 为统配符)，通过 xargs 命令传递给 grep 作为文件参数
