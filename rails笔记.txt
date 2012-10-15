@@ -268,9 +268,858 @@ end
 每一個都可以搭配:only或:except參數。
 
 
+====ActiveRecord
+
+----ActiveRecord 是 Rails 的 ORM 元件，對應概念如下：
+
+將資料庫表格(table) 對應到一個類別(class)
+類別方法就是操作表格(table)
+將資料庫一列 (row) 對應到一個物件(object)
+物件方法就是操作個別的資料(row)
+將資料庫欄位(column) 對應到物件的屬性(object attribute)
+
+----至于该用ORM还是手工SQL视情况而定。
+
+----建立 Model
+administrator@ubuntu:~/projects$ cd railstest/
+administrator@ubuntu:~/projects/railstest$ rails g model category
+      invoke  active_record
+      create    db/migrate/20120912144715_create_categories.rb
+      create    app/models/category.rb
+      invoke    test_unit
+      create      test/unit/category_test.rb
+      create      test/fixtures/categories.yml
+administrator@ubuntu:~/projects/railstest$ 
+
+打開 xxxxxxxx_create_categories.rb 你可以看到資料表的定義，讓我們加上幾個欄位吧，除了建立categiries表，同時也幫events加上一個外部鍵讓兩個表可以關連起來，在後幾章會用到：
+
+class CreateCategories < ActiveRecord::Migration
+  def change
+    create_table :categories do |t|
+      t.string :name
+      t.integer :position
+      t.timestamps
+    end
+    
+    add_column :events, :category_id, :integer
+    add_index :events, :category_id
+  end
+end
+接著執行以下指令便會產生出資料庫資料表
+
+bundle exec rake db:migrate
+db:migrate 指令會將上述的 Ruby 程式變成以下 SQL 執行。
+
+CREATE TABLE categories (
+"id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+"name" varchar(255) DEFAULT NULL,
+"position" int(4) DEFAULT NULL,
+"created_at" datetime DEFAULT NULL,
+"updated_at" datetime DEFAULT NULL);    
+
+----觀看 Log
+
+我們可以透過 log 觀察到 Rails 產生出來的 SQL 長的如何。
+
+在rails项目目录执行：
+tail -f log/development.log
+
+----如何新增
+
+ActiveRecord提供了四種API，分別是save、save!、create和create!：
+
+a = Category.new( :name => 'Ruby', :position => 1 )
+a.save
+
+b = Category.new( :name => 'Perl', :position => 2 )
+b.save!
+        
+Category.create( :name => 'Python', :position => 3 )
+c = Category.create!( :name => 'PHP', :position => 4 )
+其中create和create!就等於new完就save和save!，有無驚嘆號的差別在於validate資料驗證不正確的動作，無驚嘆號版本會回傳布林值(true或false)，有驚嘆號版本則是驗證錯誤會丟出例外。
+
+何時使用驚嘆號版本呢?save和create通常用在會處理回傳布林值(true/false)的情況下(例如在 controller 裡面根據成功失敗決定 render 或 redirect)，否則在預期應該會儲存成功的情況下，請用 save!或create! 來處理，這樣一旦碰到儲存失敗的情形，才好追蹤 bug。
+
+透過 :validate => false 可以略過驗證
+
+c.save( :validate => false )
+
+----如何查詢
+
+ActiveRecord 使用了 Arel 技術來實作查詢功能，你可以自由組合 where、limit、select、order 等條件。
+
+Arel 是 relational algebra” library。但根據 2.0 實作者 tenderlove 的說法，也可以說是一種 SQL compiler。 http://engineering.attinteractive.com/2010/12/architecture-of-arel-2-0/
+first, last 和 all
+這三個方法可以分別拿出資料庫中的第一筆、最後一筆及全部的資料：
+
+c1 = Category.first
+c2 = Category.last
+categories = Category.all # 這會是一個陣列
+如果資料量較多，請不要在正式上線環境中執行.all 把所有資料拿出來，這樣會耗費非常多的記憶體。請用分頁或縮小查詢範圍。
+find
+已知資料的主鍵 ID 的值的話，可以使用 find 方法：
+
+c3 = Category.find(1)
+c4 = Category.find(2)
+find 也可以接受陣列參數，這樣就會一次找尋多個並回傳陣列：
+
+arr = Category.find([1,2])
+# 或是
+arr = Category.find(1,2)
+如果找不到資料的話，會丟 ActiveRecord::RecordNotFound 例外。如果是 find_by_id 就不會丟出例外，而是回傳 nil。
+find_by_* 和 find_all_by_*
+find_by_* 和 find_all_by_* 是 Rails 的動態方法，可以自由用 and 組合，例如：
+
+c5 = Category.find_by_name('Ruby')
+c6 = Category.find_by_name_and_position('Ruby', 1)
+c7 = Category.find_all_by_position(2)
+find_by_sql
+如果需要手動撰寫 SQL，可以使用 find_by_sql，例如：
+
+c8 = Category.find_by_sql("select * from categories")
+不過在絕大多數的情況，是不需要手動寫 SQL 的。
+
+where 查詢條件
+where 可以非常彈性的組合出 SQL 查詢，例如：
+
+c9 = Category.where( :name => 'Ruby', :position => 1 )
+c10 = Category.where( [ "name = ? or position = ?", 'Ruby', 2] )
+其中參數有兩種寫法，一種是 Hash，另一種是 Array。前者的寫法雖然比較簡潔，但是就沒辦法寫出 or 的查詢。注意到不要使用字串寫法，例如
+
+Category.where("name = #{params[:name]}") # 請不要這樣寫
+這是因為字串寫法會有 SQL injection 的安全性問題，請改用陣列寫法。
+
+另外，where 是 lazy loading，也就是直到真的需要取值的時候，才會跟資料庫拿資料。如果需要立即觸發，可以接著使用 .all, .first, .last，例如
+
+c11 = Category.where( :name => 'Ruby', :position => 1 ).all
+limit
+
+limit 可以限制筆數
+
+c = Category.limit(5).all
+c.size # 5
+order
+
+order 可以設定排序條件
+
+Category.order("position")
+Category.order("position DESC")
+Category.order("position DESC, name ASC")
+如果要消去order條件，可以用reorder：
+
+Category.order("position").reorder("name") # 改用 name 排序
+Category.order("position").reorder(nil) # 取消所有排序
+offset
+
+offset 可以設定忽略前幾筆不取出，通常用於資料分頁：
+
+c = Category.limit(2)
+c.first.id # 1
+c = Category.limit(2).offset(3)
+c.first.id # 4
+select
+
+預設的 SQL 查詢會取出資料的所有欄位，有時候你可能不需要所有資料，為了效能我們可以只取出其中特定欄位：
+
+Category.select("id, name")
+例如欄位中有 Binary 資料時，你不會希望每次都讀取出龐大的 Binary 資料佔用記憶體，而只希望在使用者要下載的時候才讀取出來。
+readonly
+
+c = Category.readonly.first
+如此查詢出來的c就無法修改或刪除，不然會丟出ActiveRecord::ReadOnlyRecord例外。
+
+group 和 having
+
+(TODO)
+
+串接寫法
+
+以上的 where, order , limit, offset, joins, select 等等，都可以自由串接起來組合出最終的 SQL 條件：
+
+c12 = Category.where( :name => 'Ruby' ).order("id desc").limit(3)
+find_each 批次處理
+
+如果資料量很大，但是又需要全部拿出來處理，可以使用 find_each 批次處理
+
+Category.where("position > 1").find_each do |category|
+    category.do_some_thing
+end
+預設會批次撈 1000 筆，如果需要設定可以加上 :batch_size 參數。
+
+----如何刪除
+
+一種是先抓到該物件，然後刪除：
+
+c12 = Category.first
+c12.destroy
+
+----統計方法
+
+Category.count
+Category.average(:position)
+Category.maximum(:position)
+Category.sum(:position)
+其中我們可以利用上述的 where 條件縮小範圍，例如：
+
+Category.where( :name => "Ruby").count
+
+----如何更新
+
+c13 = Category.first
+c13.update_attributes(attributes)
+c13.update_attributes!(attributes)
+c13.update_attribute(attribute_name, value)
+注意 update_attribute 會略過 validation 資料驗證 注意 mass assign 安全性問題，可以透過 attr_protected 或 attr_accessor(貌似不这样不能做CREATE和UPDATE操作？) 設定
+
+----虛擬屬性(Virtual Attribute)
+
+有時候表單裡操作的屬性資料，不一定和資料庫的欄位完全對應。例如資料表分成first_name和last_name兩個欄位好了，但是表單輸入和顯示的時候，只需要一個屬性叫做full_name，這時候你就可以在model裡面定義這樣的方法：
+
+def full_name
+    "#{self.first_name} #{self.last_name}"
+end
+
+def full_name=(value)
+    self.first_name, self.last_name = value.to_s.split(" ", 2)  
+end
+
+
+====資料庫遷移 - Migrations
+
+----新增一個 Migration 檔案
+
+執行以下指令，就會在 db/migrate/ 目錄下產生如 20110203070100_migration_name.rb 的檔案
+
+rails g migration migration_name
+常見的命名方式有Add欄位名To表格名或是Remove欄位名To表格名，不過這沒有一定，能描述目的即可。
+讓我們打開這個檔案看看：
+
+class MigrationName < ActiveRecord::Migration
+  def up
+  end
+
+  def down
+  end
+end
+在這個類別中，包含了兩個類別方法分別是 up 和 down。其中 up 會在執行這個 migration 時執行，反之 down 會在滾回(Roll back)這個 Migration 時執行。例如，我們在 up 時新增一個資料庫表格(table)，那麼就可以在 down 的時候把這個table刪除。
+
+----Migration 可用的方法
+
+在up或down方法裡，我們有以下方法可以使用：
+
+對資料表做修改:
+
+create_table(name, options) 新增資料表
+drop_table(name) 移除資料表
+rename_table(old_name, new_name) 修改資料表名稱
+change_table 修改資料表欄位
+個別修改資料表欄位:
+
+add_column(table, column, type, options) 新增一個欄位
+rename_column(table, old_column_name, new_column_name) 修改欄位名稱
+change_column(table, column, type, options) 修改欄位的型態(type)
+remove_column(table , column) 移除欄位
+新增、移除索引:
+
+add_index(table, columns, options) 新增索引
+remove_index(table, index) 移除索引
+記得將所有外部鍵 foreign key 加上索引
+
+----新增和移除 Table
+執行 rails g model 時，Rails就會順便新增對應的 Migration 檔案。以上一章產生的categories migration為例：
+
+class CreateCategories < ActiveRecord::Migration
+    def change
+        create_table :categories do |t|
+          t.string :name
+          t.integer :position
+          t.timestamps
+        end
+        
+        add_column :events, :category_id, :integer
+        add_index :events, :category_id
+    end
+end
+其中的 timestamps 會建立叫做 created_at 和 updated_at 的時間欄位，這是Rails的常用慣例。它會自動設成資料新增的時間以及會後更新時間。
+
+Rails 3.1 版新增了change方法可以很聰明的自動處理大部分down的情況，上述情況的down就是移除catrgories資料表和移除events的category_id欄位，因此就不需要分別寫up和down了。如果Rails無法判斷，會在跑rake db:migrate時提醒你不能用change，需要分開寫up和down。
+
+----資料庫的欄位定義
+
+為了能夠讓不同資料庫通用，以下是Migration中的資料型態與實際資料庫使用的型態對照：
+
+Rails中的型態	說明		MySQL		Postgres		SQLite3
+:string		有限長度字串	varchar(255)	character varying(255)	varchar(255)
+:text		不限長度文字	text		text			text
+:integer	整數		int(4)		integer			integer
+:float		浮點數		float		float			float
+:decimal	十進位數	decimal		decimal			decimal
+:datetime	日期時間	datetime	timestamp		datetime
+:timestamp	時間戳章	datetime	timestamp		datetime
+:time		時間		time		time			datetime
+:date		日期		date		date			date
+:binary		二進位		blob		bytea			blob
+:boolean	布林值		tinyint		boolean			boolean
+:references	用來參照到其他
+		Table的外部鍵	int(4)	integer	integer
+另外，欄位也還有一些參數可以設定：
+
+:null 是否允許NULL，預設是允許
+:default 預設值
+:limit 用於string、text、integer、binary指定最大值
+例如：
+
+create_table :events do |t|
+    t.string :name, :null => false, :limit => 60, :default => "N/A"
+    t.references :category # 等同於 t.integer :category_id
+end
+參考資料：ActiveRecord::ConnectionAdapters::TableDefinition
+
+----Migration 搭配的 Rake 任務
+
+rake db:create 依照目前的 RAILS_ENV 環境建立資料庫
+rake db:create:all 建立所有環境的資料庫
+rake db:drop 依照目前的 RAILS_ENV 環境刪除資料庫
+rake db:drop:all 刪除所有環境的資料庫
+rake db:migrate 執行Migration動作
+rake db:rollback STEP=n 回復上N個 Migration 動作
+rake db:migrate:up VERSION=20080906120000 執行特定版本的Migration
+rake db:migrate:down VERSION=20080906120000 回復特定版本的Migration
+rake db:version 目前資料庫的Migration版本
+rake db:seed 執行 db/seeds.rb 載入種子資料
+如果需要指定Rails環境，例如production，可以輸入 RAILS_ENV=production rake db:migrate
+
+----種子資料 Seed
+
+種子資料Seed的意思是，有一些資料是應用程式跑起來必要基本資料，而這些資料的產生我們會放在db/seeds.rb這個檔案。例如，讓我們打開來，加入一些基本的Category資料：
+
+# This file should contain all the record creation needed to seed the database with its default values.
+# The data can then be loaded with the rake db:seed (or created alongside the db with db:setup).
+#
+# Examples:
+#
+#   cities = City.create([{ name: 'Chicago' }, { name: 'Copenhagen' }])
+#   Mayor.create(name: 'Emanuel', city: cities.first)
+
+Category.create!( :name => "Science" )
+Category.create!( :name => "Art" )
+Category.create!( :name => "Education" )
+輸入rake db:seed就會執行這個檔案了。通常執行的時機是第一次建立好資料庫和跑完Migration之後。
+
+
+====ActiveRecord 資料表關係
+----一對一關聯one-to-one
+假設一個Event擁有一個Location。來新增一個Location Model，其中的event_id就是外部鍵欄位：
+
+rails g model location name:string event_id:integer
+執行bundle exec rake db:migrate產生locations資料表。
+
+分別編輯app/models/event.rb和app/models/location.rb：
+
+class Event < ActiveRecord::Base
+    has_one :location # 單數
+    #...
+end
+
+class Location < ActiveRecord::Base
+    belongs_to :event # 單數
+end
+
+--範例一，建立Location物件並關聯到Event：
+
+e = Event.first
+#貌似这样会报MASS ASSIGN错误 l = Location.new( :name => 'Hsinchu', :event => e )  
+l = Location.new( :name => 'Hsinchu', :event_id => e.id ) #这样就不会
+l.save
+
+或者
+
+不要:
+@post = Post.new(params[:post])
+@post.user_id = current_user.id
+@post.save
+要：
+@post = current_user.posts.build(params[:post])
+郑嘉彬2012-09-19 11:58:38
+之前的一点笔记
+郑嘉彬2012-09-19 11:59:07
+可以从上层model去这样创建
+
+--範例二，從Event物件中建立一個Location：
+
+e = Event.first
+l = e.build_location( :name => 'Hsinchu' )
+l.save
+#看后台上两句貌似相当于这一句 l = e.create_location( :name => 'Hsinchu' ) 
+#又或者 l = Location.create( :name => 'Hsinchu' ) 然后 e.location << l
+
+----一對多關聯one-to-many
+例如一個Event擁有很多Attendee，來新增Attendee Model：
+
+rails g model attendee name:string event_id:integer
+
+執行bundle exec rake db:migrate產生attendees資料表。
+
+分別編輯app/models/event.rb和app/models/attendee.rb：
+
+class Event < ActiveRecord::Base
+    has_many :attendees # 複數
+    #...
+end
+
+class Attendee < ActiveRecord::Base
+    belongs_to :event # 單數
+end
+
+範例一，建立Attendee物件並關聯到Event:
+
+e = Event.first
+a = Attendee.new( :name => 'ihower', :event_id => e.id )
+a.save
+
+範例二，從Event物件中建立一個Attendee:
+
+e = Event.first
+a = e.attendees.build( :name => 'ihower' )
+a.save
+# 上两句等同a = e.attendees.create( :name => 'ihower' )
+
+範例三，根據特定的Event查詢Attendee
+
+e = Event.first
+e.id # 1
+a = e.attendees.find(3)
+attendees = e.attendees.where( :name => 'ihower' )
+
+範例四，刪除
+
+Event.attendees.destroy_all # 會一筆筆觸發Attendee的destroy回呼(例如可以将依赖Attendee的东东一并删除)
+Event.attendees.delete_all # 不會觸發Attendee的destroy回呼
+
+有個口訣可以記起來：有Foreign Key的Model，就是設定belongs_to的Model。
+
+----多對多關聯many-to-many
+
+例如一個Event有多個Group，一個Group有多個Event。多對多關聯的實作必須多一個額外關聯用的資料表(又做作Join table)，讓我們來建立Group Model和關聯用的EventGroupship Model，其中後者定義了兩個Foreign Keys：
+
+rails g model group name:string
+rails g model event_groupship event_id:integer group_id:integer
+執行bundle exec rake db:migrate產生這兩個資料表。
+
+分別編輯app/models/event.rb、app/models/group.rb和app/models/event_groupship.rb：
+
+class Event < ActiveRecord::Base
+    has_many :event_groupships
+    has_many :groups, :through => :event_groupships
+end
+
+class EventGroupship < ActiveRecord::Base
+    belongs_to :event
+    belongs_to :group
+end
+
+class Group < ActiveRecord::Base
+    has_many :event_groupships
+    has_many :events, :through => :event_groupships
+end
+這個Join table筆者的命名習慣會是ship結尾，用以凸顯它的關聯性質。
+
+範例，建立雙向關聯記錄:
+
+g = Group.create( :name => 'ruby taiwan' )
+e1 = Event.first
+e2 = Event.create( :name => 'ruby tuesday' )
+EventGroupship.create( :event => e1, :group => g )
+EventGroupship.create( :event => e2, :group => g )
+
+幾個常用的參數，完整的參數請查詢API文件：
+
+class_name
+
+可以變更關聯的類別名稱，例如：
+
+class Event < ActiveRecord::Base
+    belongs_to :manager, :class_name => "User" # 外部鍵是user_id
+end
+foreign_key
+
+可以變更Foreign Key的欄位名稱，例如改成manager_id：
+
+class Event < ActiveRecord::Base
+    belongs_to :manager, :class_name => "User", :foreign_key => "manager_id"
+end
+order
+
+has_many可以透過:order參數指定順序：
+
+class Event < ActiveRecord::Base
+    has_many :attendees, :order => "id desc"
+    #...
+end
+dependent
+
+可以設定當物件刪除時，也會順便刪除它的has_many物件：
+
+class Event < ActiveRecord::Base
+    has_many :attendees, :dependent => :destroy
+ end
+:dependent可以有三種不同的刪除方式，分別是：
+
+:destroy 會執行attendee的destroy回呼
+:delete 不會執行attendee的destroy回呼
+:nullify 這是預設值，不會幫忙刪除attendee
+要不要執行attendee的刪除回呼效率相差不少，如果需要的話，必須一筆筆把attendee讀取出來變成attendee物件，然後呼叫它的destroy。如果用:delete的話，只需要一個SQL語句就可以刪除全部attendee。
+
+
+====ActiveRecord 資料驗證及回呼
+
+確保必填
+
+validates_presense_of 是最常用的規則，用來檢查資料為非 nil 或空字串。
+
+class Person < ActiveRecord::Base
+ validates_presence_of :name
+ validates_presence_of :login
+ validates_presence_of :email
+end
+你也可以合併成一行
+
+class Person < ActiveRecord::Base
+ validates_presence_of :name, :login, :email
+end
+確保字串長度
+
+validates_length_of 會檢查字串的長度
+
+class Person < ActiveRecord::Base
+  validates_length_of :name, :minimum => 2 # 最少 2
+  validates_length_of :bio, :maximum => 500 # 最多 500
+  validates_length_of :password, :in => 6..20 # 介於 6~20
+  validates_length_of :registration_number, :is => 6 # 剛好 6
+end
+確保數字
+
+validates_numericality_of 會檢查必須是一個數字，以及數字的大小
+
+class Player < ActiveRecord::Base
+  validates_numericality_of :points
+  validates_numericality_of :games_played, :only_integer => true # 必須是整數      
+  validates_numericality_of :age, :greater_than => 18
+end
+除了 greater_than，還有 greater_than_or_equal_to, equal_to, less_than, less_than_or_equal_to 等參數可以使用。
+
+確保唯一
+
+檢查資料在資料表中必須唯一。:scope 參數可以設定範圍，例如底下的 :scope => :year 表示，在 Holiday 資料表中，相同 year 的 name 必須唯一。
+
+class Account < ActiveRecord::Base
+  validates_uniqueness_of :email
+end
+
+class Holiday < ActiveRecord::Base
+  validates_uniqueness_of :name, :scope => :year
+end
+另外還有個參數是 :case_sensitive 預設是 true，表示要區分大小寫。
+
+這條規則並沒有辦法百分百確定唯一，如果很接近的時間內有多個 Rails processes 一起更新資料庫，就有可能發生重複的情況。比較保險的作法是資料庫也要設定唯一性。
+確保格式正確
+
+透過正規表示法檢查資料的格式是否正確，例如可以用來檢查 Email、URL 網址、郵遞區號、手機號碼等等格式的正確性。
+
+class User < ActiveRecord::Base
+    validates_format_of :email, :with => /\A([\w\.%\+\-]+)@([\w\-]+\.)+([\w]{2,})\z/i
+    validates_format_of :url, :with =>  /(^$)|(^(http|https):\/\/[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(([0-9]{1,5})?\/.*)?$)/ix
+end
+正規表示法(regular expression)是一種用來比較字串非常有效率的方式，讀者可以利用 Rubular 進行練習。
+確保資料只能是某些值
+
+用來檢查資料必須只能某些值，例如以下的 status 只能是 pending 或 sent。
+
+class Message < ActiveRecord::Base
+    validates_inclusion_of :status, :in => ["pending", "sent"]
+end
+另外還有較少用到的 validates_exclusion_of 則是確保資料一定不會是某些值。
+
+其他
+
+validates_acceptance_of :terms_of_service
+用來讓使用者必須核選一個 checkbox 方塊，例如已閱讀使用者條款
+
+validates_confirmation_of :password 
+用在需要讓使用者在表單輸入兩次的情況，例如密碼確認。
+
+可共用的驗證參數
+
+以下這些參數都可以用在套用在上述的驗證方法上：
+
+allow_nil
+允許資料是 nil。也就是如果資料是 nil，那就略過這個檢查。
+
+class Coffee < ActiveRecord::Base
+  validates_inclusion_of :size, :in => %w(small medium large), :message => "%{value} is not a valid size", :allow_nil => true
+end
+allow_blank
+
+允許資料是 nil 或空字串。
+
+class Topic < ActiveRecord::Base
+  validates_length_of :title, :is => 5, :allow_blank => true
+end
+
+Topic.create("title" => "").valid? # => true
+Topic.create("title" => nil).valid? # => true
+message
+
+設定驗證錯誤時的訊息，若沒有提供則會用 Rails 內建的訊息。
+
+class Account < ActiveRecord::Base
+  validates_uniqueness_of :email, :message => "你的 Email 重複了"
+end
+on
+
+可以設定只有新建立(:create)或只有更新時(:update)才驗證。預設值是都要檢查(:save)。
+
+class Account < ActiveRecord::Base
+  validates_uniqueness_of :email, :on => :create
+end
+整合寫法
+
+在 Rails3 之後支援以下的整合寫法：
+
+validates :name,  :presence => true, 
+                  :length => {:minimum => 1, :maximum => 254}
+               
+validates :email, :presence => true, 
+                  :length => {:minimum => 3, :maximum => 254},
+                  :uniqueness => true,
+                  :email => true
+如果需要客製化錯誤訊息的話：
+
+validates :name,  :presence => { :message => "不能空白" } , 
+                  :length => {:minimum => 1, :maximum => 254, :message => "長度不正確" }
+
+
+====Action View: 樣板設計
+
+----局部樣板Partials
+
+局部樣板可以將Templaet中重複的程式碼抽出來，例如我們在Part1中示範過的新增和編輯的表單。Partial Template的命名慣例是底線開頭，但是呼叫時不需加上底線，例如：
+
+<%= render :partial => "common/nav" %>
+這樣便會使用app/views/common/_nav.html.erb這個樣板。如果使用Partial的樣板和Partial所在的目錄相同，可以省略第一段的common路徑。
+
+在Partial樣板中是可以直接使用實例變數的(也就是@開頭的變數)。不過好的實務作法是透過:locals明確傳遞區域變數，這樣程式會比較清楚，Partial樣板也比較容易被重複使用：
+
+<%= render :partial => "common/nav", :locals => { :a => 1, :b => 2 } %>
+這樣在partial樣板中，就可以存取到區域變數a和b。
+
+如果是陣列的資料，一般直覺會這樣寫：
+
+@items.each do |item|
+  render :partial => "item", :locals => { :item => item }
+end
+但是，partial可以支援處理陣列形式：
+
+render :partial => "item", :collection => @items, :as => :item
+這樣的好處不只是少打字而已，還有效能上的好處，Rails會針對這種形式做最佳化。
+
+
+----自定Layout內容
+
+除了<%= yield %>會載入Template內容之外，我們也可以預先自定一些其他的區塊讓Template可以置入內容。例如，要在Layout中放一個側欄用的區塊，取名叫做:sidebar：
+
+<div id="sidebar">
+    <%= yield :sidebar %>
+</div>
+<div id="content">
+    <%= yield %>
+</div>
+那麼在Template樣板中，任意地方放:
+
+<%= content_for :sidebar do %>
+   <ul>
+       <li>foo</li>
+       <li>bar</li>
+   </ul>
+<% end %>
+那麼這段內容就會被置入到Layout的<%= yield :sidebar %>之中。
+
+
+====Action View: Helpers
+
+----靜態檔案輔助方法
+
+使用Rails內建的靜態檔案(Assets)輔助方法有幾個好處：
+
+Rails會合併Stylesheet和JavasSript檔案，可以加速瀏覽器的下載。
+Rails會編譯Sass和CoffeeScript等透過Assets template engine產生的Stylesheet和JavasSript
+Rails會在靜態檔案網址中加上時間序號，如果內容有修改則會重新產生。這樣的好處是強迫用戶的瀏覽器一定會下載到最新的版本，而不會有瀏覽器快取到舊版本的問題。
+變更Assets host主機位址時，可以一次搞定，例如上CDN時。透過Helpers，Rails可以幫所有的Assets加上靜態檔案伺服器網址。
+幾個常用的方法：
+
+javascript_include_tag
+stylesheet_link_tag
+image_tag
+video_tag
+audio_tag
+
+----如何處理Model中不存在的屬性
+
+使用form_for時，其中的欄位必須是Model有的屬性，那如果資料庫沒有這個欄位呢?這時候你依需要在Model程式中加上存取方法，例如：
+
+class Event < ActiveRecord::Base
+    #...
+    def custom_field
+        # 根據其他屬性的值或條件，來決定這個欄位的值
+    end
+    
+    def custom_field=(value)
+        # 根據value，來調整其他屬性的值
+    end
+end
+這樣就可以在form_for裡使用custom_field了。
+
+<%= form_for @event do |f| %>
+    <%= f.text_field :custom_field %>
+    <%= f.submit %>
+<% end %>
+
+----資料驗證錯誤時的處理
+
+當Model物件儲存失敗時，我們通常會重新顯示表單，這時候該怎麼顯示Model的錯誤訊息呢? 以下是一個預設的範例：
+
+<%= form_for(@person) do |f| %>
+    <% if @person.errors.any? %>
+        <div id="error_explanation">
+          <h2><%= pluralize(@person.errors.count, "error") %> prohibited this person from being saved:</h2>
+
+          <ul>
+          <% @person.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+          </ul>
+        </div>
+    <% end %>
+
+    <%= f.text_field :name %>
+    <%= f.submit %>
+<% end %>
+透過檢查@person.errors我們可以把所有的錯誤訊息顯示出來。除了這種作法，我們也可以把錯誤訊息放在輸入框的旁邊：
+
+<%= form_for(@person) do |f| %>
+    <%= f.text_field :name %>
+    <% if @person.errors[:name].presence %>
+        <%= @person.errors[:name].join(", ") %>
+    <% end %>
+    
+    <%= f.submit %>
+<% end %>
+
+
+====Assets 與 Ajax 應用程式
+
+----Assets靜態檔案
+
+Assets的位置在app/assets/下，首先最重要的就是app/assets/javascripts/application.js和app/assets/stylesheets/application.css，這兩個檔案看起來充滿註解，其實它是個manifest檔案，列出了所有要載入的靜態檔案，這些檔案的位置依照慣例放在app/assets或vendor/assets目錄下。
+
+讓我們看看View，在Layout檔案中：
+
+<%= stylesheet_link_tag    "application" %>
+<%= javascript_include_tag "application" %>
+因為最後輸出都壓縮成一個檔案了，所以這裡只需要載入application.css和application.js。
+
+記得在config/application.rb中加上config.assets.enabled = true才會啟用這個功能。
+
+----如何處理圖片
+
+放在app/assets/images下的圖片該怎麼使用呢？在實際佈署後，Rails會將檔案名稱加以編碼，例如rails.png會變成rails-bd9ad5a560b5a3a7be0808c5cd76a798.png。這麼做的原因是當圖片有變更的時候，編碼就會不同而有不同的檔名，這樣就可以避免瀏覽器快取到舊的檔案。也因為檔案名稱會變動，所以放在app/assets/images下的圖片，要用的時候就沒有辦法寫死檔名。在一般的View中，可以使用image_tag這個Helper：
+
+<%= image_tag("rails.png") %>
+如果在CSS裡的話，有兩種辦法：一是將檔案命名為erb結尾，例如app/assets/stylesheets/main.css.erb，然後使用asset_path這個Helper：
+
+h1 {
+  background-image: url('<%= asset_path("rails.png") %>');
+}
+另一種方法是使用Sass或SCSS語法。其中SCSS相容於CSS。例如命名為app/assets/stylesheets/main.css.scss，然後使用image-url這個Sass提供的方法：
+
+h1 {
+    background-image: image-url("rails.png")
+}
+如果是js檔案中想要拿圖片的位置，就只能用js.erb的格式，然後內嵌asset_path Helper方法了。
+
+----編譯出最後結果
+
+開發的時候，Rails會自動將Asset的壓縮結果快取在tmp下，所以開發者不需要特別處理。但是實際正式上線時，最後壓縮的檔案還是必須放在public目錄下由網頁伺服器直接提供(或是由CDN)效能較好，以下的rake指令可以產生出來：
+
+rake assets:precompile
+產生出來的檔案在public/assets/下。
+
+rake assets:clean
+這樣就會刪除。
+
+注意，如果在開發模式下執行了rake assets:precompile，那麼因為放在public/assets/下的靜態檔案會優先丟給瀏覽器，所以這時候再修改app/assets下的原始碼會沒有作用。所以，開發時請記得要刪除這個目錄。
+
+
+====RESTful 與表單設計
+
+----下拉菜单
+
+案例二: 讓 event 可以用 select 單選一個 category
+
+首先新增一個 Category model
+
+rails g model category name:string
+然後我們需要讓 Event model 多一個欄位是 category_id
+
+rails g migration add_category_id_to_event
+然後編輯這個 migration 檔案 /db/migrate/XXXX_add_category_id_to_event 新增欄位。編輯好後執行 rake db:migrate。
+
+class AddCategoryIdToEvent < ActiveRecord::Migration
+  def self.up
+    add_column :events, :category_id, :integer
+  end
+
+  def self.down
+    remove_column :event, :category_id
+  end
+end
+編輯 app/models/event.rb 加上關連:
+
+class Event < ActiveRecord::Base
+    belongs_to :category
+end
+編輯 app/models/category.rb 加上關連
+
+class Category < ActiveRecord::Base
+    has_many :events
+end
+首先，我們需要先建立一些 Category 的資料，進入 rails console 輸入：
+
+Category.create( :name => "Course" )
+Category.create( :name => "Meeting" )
+Category.create( :name => "Conference" )
+接著編輯 app/views/events/_form.html.erb 這個樣板，讓我們來加上一個下拉選單。在表單中加入：
+
+<%= f.select :category_id, Category.all.map{ |c| [c.name, c.id] } %>
+如此就會出現下拉選單了。讓我們來修改 app/views/events/show.html.erb 可以顯示出 category 的名字：
+
+<p>Category: <%= @event.category.name %><p>
+不過 @event.category 可能是 nil，這會導致 nil.name 發生錯誤。一個簡單的方式是改使用 @event.category.try(:name)，另一招則是在 Event model 加入以下程式，就會有 @event.category_name 可以使用，而且允許 @event.category 是 nil
+delegate :name, :to => :category, :prefix => true, :allow_nil => true
+如此便完成了。不過，上述的下拉選單程式不是很漂亮，我們不應該在 View 放太多邏輯操作。讓我們改寫成一個 Helper，編輯 app/helpers/events_helper.rb
+
+module EventsHelper
+    def category_options
+        Category.all.map{ |c| [c.name, c.id] }
+    end
+end
+如此 View 就可以改寫成<%= f.select :category_id, category_options %>
+
+
 ====常见错误
     NoMethodError   方法名写错，或者没有定义该方法
     找不到路由	    检查出错view的url参数（例如单复数），参考rake routes
+
 
 
 ====Layout设定HTML的默认Title
