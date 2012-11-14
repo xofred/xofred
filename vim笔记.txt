@@ -1,5 +1,6 @@
-格式化缩进		=G(当前行至最后，例如gg=G就是开头至最后)			
+查看文件编码		:set fileencoding
 
+格式化缩进		=G(当前行至最后，例如gg=G就是开头至最后)			
 NERDTree刷新目录	r
 
 vim帮助手册目录		:help usr_toc.txt
