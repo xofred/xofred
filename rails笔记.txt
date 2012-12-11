@@ -1,3 +1,8 @@
+====设置时区
+在~/projects/simpleCms/config/application.rb中
+config.time_zone = 'Beijing' # 时区设成东八区
+
+
 ====Rails 指令
 
 generate 可縮寫為 g
