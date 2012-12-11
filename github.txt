@@ -1,2 +1,8 @@
-恢复文件
+----github在线文档
+http://gitref.org/
+
+
+----以在线为准，恢复本地文件
 git checkout 文件名（.代表全部文件）
+
+切换分支后面换成分支名，例如git checkout master
