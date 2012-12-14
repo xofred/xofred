@@ -1,3 +1,41 @@
+====单元测试
+require 'test_helper'
+
+class ArticleTest < ActiveSupport::TestCase
+  test "article attributes must not be empty" do
+    article = Article.new
+    assert article.invalid?
+    assert article.errors[:title].any?
+    assert article.errors[:description].any?
+    assert article.errors[:publish_datetime].any?
+  end
+end
+
+
+====测试前为新增和更新赋值
+setup do
+    @article = articles(:one)
+    @update = {
+      :title => 'Lorem Ipsum',
+      :description => 'Wibbles are fun!',
+      :image_url => 'lorem.jpg',
+    }
+end
+
+test "should create article" do
+    assert_difference('Article.count') do
+      post :create, :article => @update
+    end
+
+    assert_redirected_to article_path(assigns(:article))
+end
+
+test "should update article" do
+    put :update, :id => @article.to_param, :article => @update
+    assert_redirected_to article_path(assigns(:article))
+end
+
+
 ====设置时区
 在~/projects/simpleCms/config/application.rb中
 config.time_zone = 'Beijing' # 时区设成东八区
