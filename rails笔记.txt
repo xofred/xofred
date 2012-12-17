@@ -18,6 +18,8 @@ class ArticleTest < ActiveSupport::TestCase
   end
 end
 
+depot> rake test:units
+
 
 ====测试前为新增和更新赋值
 setup do

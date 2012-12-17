@@ -1,3 +1,12 @@
+# http://www.ruby-doc.org/
+
+# join的用法
+join(sep=$,) → str click to toggle source
+Returns a string created by converting each element of the array to a string, separated by sep.
+
+[ "a", "b", "c" ].join        #=> "abc"
+[ "a", "b", "c" ].join("-")   #=> "a-b-c"
+
 输出篇
   print, puts, p
     puts和p会输出后自动换行,例如输出多个字符串时，每个字符串后都会换行
