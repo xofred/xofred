@@ -1,9 +1,51 @@
+####carrierwave
+#Removing uploaded files
+#If you want to remove a previously uploaded file on a mounted uploader, you can easily add a checkbox to the form which will remove the file when checked.
+#model的attr_accesable也要加上 :remove_avatar
+
+<%= form_for @user, :html => {:multipart => true} do |f| %>
+  <p>
+    <label>My Avatar</label>
+    <%= image_tag(@user.avatar_url) if @user.avatar? %>
+    <%= f.file_field :avatar %>
+  </p>
+
+  <p>
+    <label>
+      <%= f.check_box :remove_avatar %>
+      Remove avatar
+    </label>
+  </p>
+<% end %>
+If you want to remove the file manually, you can call remove_avatar!.
+
+#Securing uploads
+#Certain file might be dangerous if uploaded to the wrong location, such as php files or other script files. CarrierWave allows you to specify a white-list of allowed extensions.
+#If you're mounting the uploader, uploading a file with the wrong extension will make the record invalid instead. Otherwise, an error is raised.
+class MyUploader < CarrierWave::Uploader::Base
+  def extension_white_list
+    %w(jpg jpeg gif png)
+  end
+end
+
+#使用在线地址
+#例如图片字段是image的话，在线地址则是remote_image_url(controller和view里都是这个名字)
+<%= form_for @user, :html => {:multipart => true} do |f| %>
+  <p>
+    <label>My Avatar URL:</label>
+    <%= image_tag(@user.avatar_url) if @user.avatar? %>
+    <%= f.text_field :remote_avatar_url %>
+  </p>
+<% end %>
+
+
 ####防止SQL注入
 #使用rails动态查询方法，例如
   find_by_xx
 #如果手动写条件则要注意:conditions和:order
 #使用问号使SQL注入变成普通字符串，例如'变成\'
   @tasks = Task.find(:all, :conditions = > ["name LIKE ?", '%' + params[:query] + '%'])
+
 
 ####destory变show
 #检查layouts/application.html.erb是否包含js文件（例如默认的），没有加上
