@@ -1,11 +1,44 @@
-====fixtures和yml格式要注意的地方
+####防止SQL注入
+#使用rails动态查询方法，例如
+  find_by_xx
+#如果手动写条件则要注意:conditions和:order
+#使用问号使SQL注入变成普通字符串，例如'变成\'
+  @tasks = Task.find(:all, :conditions = > ["name LIKE ?", '%' + params[:query] + '%'])
+
+####destory变show
+#检查layouts/application.html.erb是否包含js文件（例如默认的），没有加上
+<%= javascript_include_tag "application" %>
+#或者将link_to改成button_to
+<%= button_to 'Logout', logout_path, :method => :delete %>
+
+
+####白名单
+在application_controller.rb中写好before_filter后
+# application_controller.rb
+class ApplicationController < ActionController::Base
+  before_filter :authorize
+  protect_from_forgery
+
+  protected
+
+  def authorize
+    unless User.find_by_id(session[:user_id])
+      redirect_to login_url, :notice => "Please log in"
+    end
+  end
+end
+# 在无需登录的controller中添加skip_before_filter
+skip_before_filter :authorize
+
+
+####fixtures和yml格式要注意的地方
 几点注意:
   使用空格:每行数据开头必须使用空格，不要用tab
   缩进量:每组数据的缩进量要一致
   正确字段名:要与数据库的一致
     
 
-====单元测试
+####单元测试
 require 'test_helper'
 
 class ArticleTest < ActiveSupport::TestCase
@@ -21,7 +54,7 @@ end
 depot> rake test:units
 
 
-====测试前为新增和更新赋值
+####测试前为新增和更新赋值
 setup do
     @article = articles(:one)
     @update = {
@@ -45,12 +78,12 @@ test "should update article" do
 end
 
 
-====设置时区
+####设置时区
 在~/projects/simpleCms/config/application.rb中
 config.time_zone = 'Beijing' # 时区设成东八区
 
 
-====Rails 指令
+####Rails 指令
 
 generate 可縮寫為 g
 
@@ -93,12 +126,12 @@ rails new my_app
 其他說明可以輸入 rails 看到全部的指令。
 
 
-====Rails 啟動與應用程式設定
+####Rails 啟動與應用程式設定
 
 應用程式設定放在config/application.rb。注意到如果你有任何修改，無論在什麼模式下，都必須重新啟動 Rails 設定才會生效。
 
 
-====自定义出错页面
+####自定义出错页面
 
 # Full error reports are disabled and caching is turned on
  config.consider_all_requests_local       = false
@@ -106,7 +139,7 @@ config.action_controller.perform_caching = true
 不同於 development，如果在 production 環境出現例外錯誤，不會顯示程式 call stack 訊息，而是回傳 public/500.html 頁面。
 
 
-====Connecting to Oracle from Ruby on Rails
+####Connecting to Oracle from Ruby on Rails
 1.Install the Ruby/Oracle Call Interface (OCI8) library
     sudo gem install ruby-oci8
 2.A simple test of your Ruby OCI8 driver
@@ -165,7 +198,7 @@ development
 password  
 
  
-====Bundler 與 Gemfile 設定檔
+####Bundler 與 Gemfile 設定檔
     
 要使用的 Gems，都必須宣告在 Gemfile 設定檔中，沒寫在裡面的話，就算手動 require 也找不到。
 
@@ -179,7 +212,7 @@ bundle package
 什麼時候需要用到這個功能呢? 例如你希望佈署的時候避免外部連線
 
 
-====名稱慣例
+####名稱慣例
 Model 命名
 
 類別名稱使用大寫、單數，沒有底線。而檔名使用小寫、單數，用底線。資料庫表格名稱用小寫且為複數。例如：
@@ -209,7 +242,7 @@ Helper 名稱 module PeopleHelper
 檔名 app/helpers/people_helper.rb
 
 
-====Routing路由
+####Routing路由
 routes.rb中，越上面越優先。是如果有網址同時符合多個規則，會使用最上面的規則。
 
 雖然RESTful已經是設計Rails最常見的路徑模式，但是在一些特殊的情況、不符合CRUD模型的情結就不一定適用了，例如有多重步驟的表單(又叫作Wizard) 時，使用命名路由反而會比較簡潔，例如step1_path, step2_path, step3_path等。
@@ -219,7 +252,7 @@ routes.rb中，越上面越優先。是如果有網址同時符合多個規則�
 root :to => 'welcome#show'
 記得也要刪除public/index.html這個檔案
 
-----RESTful
+####RESTful
 
 在config/routes.rb加入以下一行程式：
 
@@ -235,7 +268,7 @@ get    '/events/new'      => "events#new",     :as => "new_event"
 get    '/events/:id/edit' => "events#edit",    :as => "edit_event"
 注意到這七個Action方法的名字，Rails是定好的，無法修改。
 
-----多層的Resources
+####多層的Resources
 
 當一個Resource一定會依存另一個Resource時，我們可以套疊多層的Resources，例如以下是任務一定屬於在專案底下：
 
@@ -246,21 +279,21 @@ end
 
 實務上不建議設計超過兩層
 
-----rake routes
+####rake routes
 如果你不清楚這些路由設定到底最後的規則是什麼，你可以執行：
 
 rake routes
 這樣就會產生出所有URL Helper、URL 網址和對應的Controller Action都列出來。
 
 
-====Action Controller: 控制HTTP流程
-----產生Controller與Action
+####Action Controller: 控制HTTP流程
+####產生Controller與Action
     在Action方法中我們要處理request，基本上會做三件事情: 1. 收集request的資訊，例如使用者傳進來的參數 2. 操作Model來做資料的處理 3. 回傳response結果，這個動作稱作render
 
-----Render結果
+####Render結果
     在根據request資訊做好資料處理之後，我們接下來就要回傳結果給用戶。依照Rails慣例就是app/views/{controller_name}/{action_name}。如果找不到樣板檔案的話，會出現Template is missing的錯誤。
     
-----Redirect
+####Redirect
 
 如果Action不要render任何結果，而是要使用者轉向到別頁，可以使用redirect_to
 
@@ -268,7 +301,7 @@ redirect_to :action => "show", :id => @event
 redirect_to :back 回到上一頁。
 注意，一個Action中只能有一個render或一個redirect_to。不然你會得到一個DoubleRenderError例外錯誤。
 
-----respond_to
+####respond_to
 
 respond_to可以用來回應不同的資料格式。Rails內建支援格式包括有:html, :text, :js, :css, :ics, :csv, :xml, :rss, :atom, :yaml, :json等。如果需要擴充，可以編輯config/initializers/mime_types.rb這個檔案。
 
@@ -280,7 +313,7 @@ respond_to do |format|
   format.any { render :text => "WTF" }
 end
 
-----Flash訊息
+####Flash訊息
 
 我們用Flash來傳遞訊息。它的用處在於redirect時，能夠從這一個request傳遞文字訊息到下一個request，例如從create Action傳遞「成功建立」的訊息到show Action。
 
@@ -296,7 +329,7 @@ end
 <p><%= flash[:notice] %></p>
 使用過一次之後，Rails就會自動清除flash
 
-----Filters
+####Filters
 
 可將Controller中重複的程式抽出來，其中before_filter最為常用。
 
@@ -320,9 +353,9 @@ end
 每一個都可以搭配:only或:except參數。
 
 
-====ActiveRecord
+####ActiveRecord
 
-----ActiveRecord 是 Rails 的 ORM 元件，對應概念如下：
+####ActiveRecord 是 Rails 的 ORM 元件，對應概念如下：
 
 將資料庫表格(table) 對應到一個類別(class)
 類別方法就是操作表格(table)
@@ -330,9 +363,9 @@ end
 物件方法就是操作個別的資料(row)
 將資料庫欄位(column) 對應到物件的屬性(object attribute)
 
-----至于该用ORM还是手工SQL视情况而定。
+####至于该用ORM还是手工SQL视情况而定。
 
-----建立 Model
+####建立 Model
 administrator@ubuntu:~/projects$ cd railstest/
 administrator@ubuntu:~/projects/railstest$ rails g model category
       invoke  active_record
@@ -369,14 +402,14 @@ CREATE TABLE categories (
 "created_at" datetime DEFAULT NULL,
 "updated_at" datetime DEFAULT NULL);    
 
-----觀看 Log
+####觀看 Log
 
 我們可以透過 log 觀察到 Rails 產生出來的 SQL 長的如何。
 
 在rails项目目录执行：
 tail -f log/development.log
 
-----如何新增
+####如何新增
 
 ActiveRecord提供了四種API，分別是save、save!、create和create!：
 
@@ -396,7 +429,7 @@ c = Category.create!( :name => 'PHP', :position => 4 )
 
 c.save( :validate => false )
 
-----如何查詢
+####如何查詢
 
 ActiveRecord 使用了 Arel 技術來實作查詢功能，你可以自由組合 where、limit、select、order 等條件。
 
@@ -498,14 +531,14 @@ Category.where("position > 1").find_each do |category|
 end
 預設會批次撈 1000 筆，如果需要設定可以加上 :batch_size 參數。
 
-----如何刪除
+####如何刪除
 
 一種是先抓到該物件，然後刪除：
 
 c12 = Category.first
 c12.destroy
 
-----統計方法
+####統計方法
 
 Category.count
 Category.average(:position)
@@ -515,7 +548,7 @@ Category.sum(:position)
 
 Category.where( :name => "Ruby").count
 
-----如何更新
+####如何更新
 
 c13 = Category.first
 c13.update_attributes(attributes)
@@ -523,7 +556,7 @@ c13.update_attributes!(attributes)
 c13.update_attribute(attribute_name, value)
 注意 update_attribute 會略過 validation 資料驗證 注意 mass assign 安全性問題，可以透過 attr_protected 或 attr_accessor(貌似不这样不能做CREATE和UPDATE操作？) 設定
 
-----虛擬屬性(Virtual Attribute)
+####虛擬屬性(Virtual Attribute)
 
 有時候表單裡操作的屬性資料，不一定和資料庫的欄位完全對應。例如資料表分成first_name和last_name兩個欄位好了，但是表單輸入和顯示的時候，只需要一個屬性叫做full_name，這時候你就可以在model裡面定義這樣的方法：
 
@@ -536,9 +569,9 @@ def full_name=(value)
 end
 
 
-====資料庫遷移 - Migrations
+####資料庫遷移 - Migrations
 
-----新增一個 Migration 檔案
+####新增一個 Migration 檔案
 
 執行以下指令，就會在 db/migrate/ 目錄下產生如 20110203070100_migration_name.rb 的檔案
 
@@ -555,7 +588,7 @@ class MigrationName < ActiveRecord::Migration
 end
 在這個類別中，包含了兩個類別方法分別是 up 和 down。其中 up 會在執行這個 migration 時執行，反之 down 會在滾回(Roll back)這個 Migration 時執行。例如，我們在 up 時新增一個資料庫表格(table)，那麼就可以在 down 的時候把這個table刪除。
 
-----Migration 可用的方法
+####Migration 可用的方法
 
 在up或down方法裡，我們有以下方法可以使用：
 
@@ -577,7 +610,7 @@ add_index(table, columns, options) 新增索引
 remove_index(table, index) 移除索引
 記得將所有外部鍵 foreign key 加上索引
 
-----新增和移除 Table
+####新增和移除 Table
 執行 rails g model 時，Rails就會順便新增對應的 Migration 檔案。以上一章產生的categories migration為例：
 
 class CreateCategories < ActiveRecord::Migration
@@ -596,7 +629,7 @@ end
 
 Rails 3.1 版新增了change方法可以很聰明的自動處理大部分down的情況，上述情況的down就是移除catrgories資料表和移除events的category_id欄位，因此就不需要分別寫up和down了。如果Rails無法判斷，會在跑rake db:migrate時提醒你不能用change，需要分開寫up和down。
 
-----資料庫的欄位定義
+####資料庫的欄位定義
 
 為了能夠讓不同資料庫通用，以下是Migration中的資料型態與實際資料庫使用的型態對照：
 
@@ -627,7 +660,7 @@ create_table :events do |t|
 end
 參考資料：ActiveRecord::ConnectionAdapters::TableDefinition
 
-----Migration 搭配的 Rake 任務
+####Migration 搭配的 Rake 任務
 
 rake db:create 依照目前的 RAILS_ENV 環境建立資料庫
 rake db:create:all 建立所有環境的資料庫
@@ -641,7 +674,7 @@ rake db:version 目前資料庫的Migration版本
 rake db:seed 執行 db/seeds.rb 載入種子資料
 如果需要指定Rails環境，例如production，可以輸入 RAILS_ENV=production rake db:migrate
 
-----種子資料 Seed
+####種子資料 Seed
 
 種子資料Seed的意思是，有一些資料是應用程式跑起來必要基本資料，而這些資料的產生我們會放在db/seeds.rb這個檔案。例如，讓我們打開來，加入一些基本的Category資料：
 
@@ -659,8 +692,8 @@ Category.create!( :name => "Education" )
 輸入rake db:seed就會執行這個檔案了。通常執行的時機是第一次建立好資料庫和跑完Migration之後。
 
 
-====ActiveRecord 資料表關係
-----一對一關聯one-to-one
+####ActiveRecord 資料表關係
+####一對一關聯one-to-one
 假設一個Event擁有一個Location。來新增一個Location Model，其中的event_id就是外部鍵欄位：
 
 rails g model location name:string event_id:integer
@@ -705,7 +738,7 @@ l.save
 #看后台上两句貌似相当于这一句 l = e.create_location( :name => 'Hsinchu' ) 
 #又或者 l = Location.create( :name => 'Hsinchu' ) 然后 e.location << l
 
-----一對多關聯one-to-many
+####一對多關聯one-to-many
 例如一個Event擁有很多Attendee，來新增Attendee Model：
 
 rails g model attendee name:string event_id:integer
@@ -750,7 +783,7 @@ Event.attendees.delete_all # 不會觸發Attendee的destroy回呼
 
 有個口訣可以記起來：有Foreign Key的Model，就是設定belongs_to的Model。
 
-----多對多關聯many-to-many
+####多對多關聯many-to-many
 
 例如一個Event有多個Group，一個Group有多個Event。多對多關聯的實作必須多一個額外關聯用的資料表(又做作Join table)，讓我們來建立Group Model和關聯用的EventGroupship Model，其中後者定義了兩個Foreign Keys：
 
@@ -823,7 +856,7 @@ class Event < ActiveRecord::Base
 要不要執行attendee的刪除回呼效率相差不少，如果需要的話，必須一筆筆把attendee讀取出來變成attendee物件，然後呼叫它的destroy。如果用:delete的話，只需要一個SQL語句就可以刪除全部attendee。
 
 
-====ActiveRecord 資料驗證及回呼
+####ActiveRecord 資料驗證及回呼
 
 確保必填
 
@@ -951,9 +984,9 @@ validates :name,  :presence => { :message => "不能空白" } ,
                   :length => {:minimum => 1, :maximum => 254, :message => "長度不正確" }
 
 
-====Action View: 樣板設計
+####Action View: 樣板設計
 
-----局部樣板Partials
+####局部樣板Partials
 
 局部樣板可以將Templaet中重複的程式碼抽出來，例如我們在Part1中示範過的新增和編輯的表單。Partial Template的命名慣例是底線開頭，但是呼叫時不需加上底線，例如：
 
@@ -976,7 +1009,7 @@ render :partial => "item", :collection => @items, :as => :item
 這樣的好處不只是少打字而已，還有效能上的好處，Rails會針對這種形式做最佳化。
 
 
-----自定Layout內容
+####自定Layout內容
 
 除了<%= yield %>會載入Template內容之外，我們也可以預先自定一些其他的區塊讓Template可以置入內容。例如，要在Layout中放一個側欄用的區塊，取名叫做:sidebar：
 
@@ -997,9 +1030,9 @@ render :partial => "item", :collection => @items, :as => :item
 那麼這段內容就會被置入到Layout的<%= yield :sidebar %>之中。
 
 
-====Action View: Helpers
+####Action View: Helpers
 
-----靜態檔案輔助方法
+####靜態檔案輔助方法
 
 使用Rails內建的靜態檔案(Assets)輔助方法有幾個好處：
 
@@ -1015,7 +1048,7 @@ image_tag
 video_tag
 audio_tag
 
-----如何處理Model中不存在的屬性
+####如何處理Model中不存在的屬性
 
 使用form_for時，其中的欄位必須是Model有的屬性，那如果資料庫沒有這個欄位呢?這時候你依需要在Model程式中加上存取方法，例如：
 
@@ -1036,7 +1069,7 @@ end
     <%= f.submit %>
 <% end %>
 
-----資料驗證錯誤時的處理
+####資料驗證錯誤時的處理
 
 當Model物件儲存失敗時，我們通常會重新顯示表單，這時候該怎麼顯示Model的錯誤訊息呢? 以下是一個預設的範例：
 
@@ -1068,9 +1101,9 @@ end
 <% end %>
 
 
-====Assets 與 Ajax 應用程式
+####Assets 與 Ajax 應用程式
 
-----Assets靜態檔案
+####Assets靜態檔案
 
 Assets的位置在app/assets/下，首先最重要的就是app/assets/javascripts/application.js和app/assets/stylesheets/application.css，這兩個檔案看起來充滿註解，其實它是個manifest檔案，列出了所有要載入的靜態檔案，這些檔案的位置依照慣例放在app/assets或vendor/assets目錄下。
 
@@ -1082,7 +1115,7 @@ Assets的位置在app/assets/下，首先最重要的就是app/assets/javascript
 
 記得在config/application.rb中加上config.assets.enabled = true才會啟用這個功能。
 
-----如何處理圖片
+####如何處理圖片
 
 放在app/assets/images下的圖片該怎麼使用呢？在實際佈署後，Rails會將檔案名稱加以編碼，例如rails.png會變成rails-bd9ad5a560b5a3a7be0808c5cd76a798.png。這麼做的原因是當圖片有變更的時候，編碼就會不同而有不同的檔名，這樣就可以避免瀏覽器快取到舊的檔案。也因為檔案名稱會變動，所以放在app/assets/images下的圖片，要用的時候就沒有辦法寫死檔名。在一般的View中，可以使用image_tag這個Helper：
 
@@ -1099,7 +1132,7 @@ h1 {
 }
 如果是js檔案中想要拿圖片的位置，就只能用js.erb的格式，然後內嵌asset_path Helper方法了。
 
-----編譯出最後結果
+####編譯出最後結果
 
 開發的時候，Rails會自動將Asset的壓縮結果快取在tmp下，所以開發者不需要特別處理。但是實際正式上線時，最後壓縮的檔案還是必須放在public目錄下由網頁伺服器直接提供(或是由CDN)效能較好，以下的rake指令可以產生出來：
 
@@ -1112,9 +1145,9 @@ rake assets:clean
 注意，如果在開發模式下執行了rake assets:precompile，那麼因為放在public/assets/下的靜態檔案會優先丟給瀏覽器，所以這時候再修改app/assets下的原始碼會沒有作用。所以，開發時請記得要刪除這個目錄。
 
 
-====RESTful 與表單設計
+####RESTful 與表單設計
 
-----下拉菜单
+####下拉菜单
 
 案例二: 讓 event 可以用 select 單選一個 category
 
@@ -1168,13 +1201,13 @@ end
 如此 View 就可以改寫成<%= f.select :category_id, category_options %>
 
 
-====常见错误
+####常见错误
     NoMethodError   方法名写错，或者没有定义该方法
     找不到路由	    检查出错view的url参数（例如单复数），参考rake routes
 
 
 
-====Layout设定HTML的默认Title
+####Layout设定HTML的默认Title
     Layout可以用來包裹樣板，讓不同樣板共用相同的HTML開頭和結尾部分。當Rails要顯示一個樣板給瀏覽器時，它會將樣板的HTML放到Layout的HTML之中。預設的Layout檔案是app/views/layouts/application.html.erb，其中yield就是會被替換成樣板的地方。所有的樣版預設都會套這個Layout。我們會再 Action View一章中介紹如何更換不同Layout。
 
 現在，讓我們修改Layout中的<title>：
@@ -1202,11 +1235,11 @@ end
 這樣的話，進去show頁面的title就會是活動名稱。其他頁面因為沒有設定@page_title，就會是”Event application”。
 
 
-====html.erb中<%与<%=的区别
+####html.erb中<%与<%=的区别
     <%和<%=不太一樣，前者只執行不輸出，像用來迭代的each和end這兩行就不需要輸出。而後者<%= 裡的結果會輸出給瀏覽器。
 
 
-====將換行字元\n置換成<br />
+####將換行字元\n置換成<br />
 <%= @event.name %>
 <%= simple_format(@event.description) %>
  
@@ -1214,7 +1247,7 @@ end
     其中simple_format是一個內建的View Helper，它的作用是可以將換行字元\n置換成<br />，有基本的HTML換行效果。
 
 
-====变量单复数含义
+####变量单复数含义
 def destroy
   @event = Event.find(params[:id])
   @event.destroy
