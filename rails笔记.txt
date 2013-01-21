@@ -1,3 +1,28 @@
+####分页
+#在controller中
+@events = Event.page(params[:page]).per(5)
+#然后在view中
+<%= paginate @events %>
+
+
+####多对多的两种实现
+#假如除了双方id还需要储存额外信息，或者需要对多对多关系进行增删改操作，适合用has_many :through实现（新建一个多对多model）
+#不需要的话用has_and_belongs_to即可
+
+
+####路由的path和url
+#例如首页是
+root :to => 'catalog#index', :as => 'catalog'
+#例如现在位置就在首页
+http://localhost:3000/
+#这时点击'首页'这个链接
+<%= link_to '首页', catalog_path %>
+#catalog_path是相对路径
+/ 
+#catalog_url是绝对路径
+http://localhost:3000/
+
+
 #### Uploading Files
 A common task is uploading some sort of file, whether it’s a picture of a person or a CSV file containing data to process. The most important thing to remember with file uploads is that the rendered form’s encoding MUST be set to “multipart/form-data”. If you use form_for, this is done automatically. If you use form_tag, you must set it yourself, as per the following example.
 
