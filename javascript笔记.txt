@@ -1,0 +1,57 @@
+//////javascript基础
+////创建变量
+//赋值
+var message = "Hello world!";
+/*
+var是保留字
+变量名风格camelCase
+赋值在右边
+一行以分号结束
+*/
+
+
+////变量类型
+//动态
+var alpha = 42; //integer
+var bravo = "Fourty-two"; //string
+var charlie = 4.2; //float
+var delta = true; //boolean: true, false
+
+
+////全局函数
+//提示框
+alert("Hi, Jack!");
+//确定框
+var answer = confirm("R U sure?"); //确定返回ture, 取消返回false, 搭配if做野
+//输入框
+var count = prompt("Passenger Count:"); //return as a string
+
+
+////对象自有函数
+//字符串函数
+//加了括号才执行！
+"SHORT, POOR, UGLY".toLowerCase(); 
+"tall, wealthy, handsome".toUpperCase();
+
+"tall, wealthy, handsome".charAt(7);//索引从0开始
+
+alert("Hi!".replace("!", "jack!")); //Hijack!
+
+"tall, wealthy, handsome".split(", "); //["tall", "wealthy", "handsome"]
+
+
+//数字函数
+2 + 0.13；//2.13
+2 / 13; //0.15384615384615385
+parseInt("8 Sierras, 1 package"); //8, 返回第一个遇到的数字
+
+var nut = 213;
+nut.toString(); //"213"
+
+
+//数组
+var perfect = ["tall", "wealthy", "handsome"]; //元素用逗号分隔
+alert(perfect[2]); //handsome
+perfect.length; //3, length是属性不用加括号！
+perfect.reverse(); //["handsome", "wealthy", "tall"],该方法会改变原来的数组，而不会创建新的数组。
+

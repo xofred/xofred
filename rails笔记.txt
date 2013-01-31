@@ -1,3 +1,7 @@
+####each_with_index
+#遍历之余还可提供index,注意index从0开始自增
+
+
 ####分页
 #在controller中
 @events = Event.page(params[:page]).per(5)
