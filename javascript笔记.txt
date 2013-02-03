@@ -1,3 +1,32 @@
+//////操作DOM元素
+//返回不带HTML标签的内容
+$('div.span7').text(); //"Simple CMS"
+//设置
+$('div.span7 > h1').text('fuck GFW'); 
+
+//返回带HTML标签的内容
+$('div.span7').html(); //"<h1>fuck GFW</h1>"
+//设置
+$('div.span7').html("<h1><i>fuck GFW</i></h1>");
+
+////在内容里面
+//前面插入
+$('h1').prepend('A Nice ');
+//后面插入
+$('h1').append(' again');
+
+//创建同级元素
+$('h1').after("<h3>by CZ</h3>");
+$('div.span2 > a:last').before('<a href>网站地图</a><br />');
+
+//删除元素
+$('div.span2 > a:last').remove();
+
+//移动元素
+var sitemap = $('div.span2 > a:last').remove();
+$('div.span2 > a:last').before(sitemap);
+
+
 //////操作样式
 //查看样式
 $("p").css("font-size"); //"14px"
