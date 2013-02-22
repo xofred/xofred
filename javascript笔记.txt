@@ -1,3 +1,213 @@
+//////AJAX
+//$.ajax()
+jQuery.ajax( url [, settings ] ); //url是字符串，setting是json的object 
+//$.get()相当于
+$.ajax({
+  url: url,
+  data: data,
+  success: success,
+  dataType: dataType
+});
+
+
+//////事件与动画
+////事件
+//从DOM中读取
+<section id='tabs'>
+  <ul>
+    <li><a href='#2012-09-27' data-flights='6'>Sep 27</a></li>
+    <li><a href='#2012-09-28' data-flights='5'>Sep 28</a></li>
+    <li><a href='#2012-09-29' data-flights='5'>Sep 29</a></li>
+    <li><a href='#2012-09-30' data-flights='3'>Sep 30</a></li>
+    <li><a href='#2012-10-01' data-flights='3'>Oct 1</a></li>
+  </ul>
+
+  <div id='2012-09-27'>Loading Sep 27</div>
+  <div id='2012-09-28'>Loading Sep 28</div>
+  <div id='2012-09-29'>Loading Sep 29</div>
+  <div id='2012-09-30'>Loading Sep 30</div>
+  <div id='2012-10-01'>Loading Oct 1</div>
+
+  <div id='error'>
+    <h2>We are fucked.</h2>
+    <p>Sorry about that, <a href='#'>Click Here</a> to try again.</p>
+  </div>
+
+  <div id='loading'>
+    <h2>Just a minute while we break through the GFW</h2>
+  </div>
+</section>
+
+$('#tabs ul li:first').html(); //<a href='#2012-09-27' data-flights='6'>Sep 27</a>
+$('#tabs ul li:first a').text(); //Sep 27
+$('#tabs ul li:first a').attr('href'); //#2012-09-27
+$('#tabs ul li:first a').data('flights'); //6
+
+var seatNum = $(this).data('seat');
+$('#seatSelected').text(seatNum);
+//可以直接写成
+$('#seatSelected').text($(this).data('seat'));
+
+//making tabs
+jQuery(function($) { //相当于$(document).ready(function ())，但确保里面的$是jquery
+  function changeTab(e) { //包成函数让click调用
+    e.preventDefault();
+    $('#tabs li a.active').removeClass('active').click(changeTab); //相当于bind('click', changeTab)
+    $(this).addClass('active').unbind('click', changeTab); //点同一个tab时不触发ajax请求
+    showFlights($(this).attr('href')); //利用href和div#形成对应
+  }
+
+  function showFlights(activeDiv) {
+    $('#tabs div').hide();
+    ////AJAX
+    $.ajax('/flights', { //格式：/flights?date=%232012-09-27 (#转义成%23)
+      data: { date: activeDiv },
+      cache: false, //确保浏览器没有旧data的缓存
+      beforeSend: function(result) {
+	$('#error').hide();
+	$('#loading').show();
+      },
+      complete: function() {
+	$('#loading').hide();	
+      },
+      success: function(result) {
+	$(activeDiv).html(result); //先加载再显示
+	$(activeDiv).show(); //超链接会返回#XXXX-XX-XX，相当于帮手选择id
+      },
+      error: function(result) { //例如服务器无法访问时，显示出错信息
+	$('#error').show();
+      }
+    }); //航班数据将用AJAX读取，下面div的事件要用live绑定
+  }
+
+  function showNumberOfFlights(e) {
+    var num_flights = $(this).data('flights');
+    $(this).append("<span class='tooltip'>" + num_flights + " flights</span>");
+  }
+
+  function hideNumberOfFlights(e) {
+    $('#tabs span.tooltip').remove();
+  }
+
+  $('#tabs li:eq(2) a').click(); //默认选择第三列
+
+  $('#tabs li a').bind({ //同一个元素的事件可用bind包起来
+    click: changeTab,
+    mouseenter: showNumberOfFlights, //显示有几个航班
+    mouseleave: hideNumberOfFlights
+  });
+
+  $('#error a').click(function(e){ //出错时点击重试
+    e.preventDefault();
+    showFlights($('#tabs li a.active').attr('href'));
+  });
+});
+
+//选中超链接
+<table id='flights'>
+  ...
+  <tr>
+    <td>3:15 PM</td>
+    <td>5:08 PM</td>
+    <td>1946</td>
+    <td>2 stops</td>
+    <td><a href='#' class='selected'>$276</a></td>
+    <td><a href='#'>$205</a></td>
+  </tr>
+  ...
+</table>
+
+function selectFlight(e) {
+  e.preventDefault();
+  $('#flights a.selected').removeClass('selected');
+  $(this).addClass('selected');
+}
+
+$('#flights a').live('click', selectFlight); //等同于$(document).delegate('#flights a', 'click', selectFlight);
+//正路做法：
+$('#tabs div').delegate('#flights a', 'click', selectFlight); //不查整个DOM
+
+
+////函数
+function popWarning(message){
+  alert("Warning:" + message);
+}
+//匿名函数
+function (message){ //因为没有名字，无法直接调用，作为参数供其他函数调用
+  alert("Warning:" + message);
+} 
+//调用多个函数
+$(document).ready(function (){
+  $('div#plane_features li').hover(
+    function(){$(this).addClass('feature_hover');}, //用逗号分隔
+    function(){$(this).removeClass('feature_hover');}
+  ); 
+});
+
+
+////鼠标事件
+//左键点击
+$(document).ready(function(){ //ready 对象完全加载完才执行，这里是全部DOM
+  $('p').click(function(){
+    alert('Got Ya!');
+  });
+});
+//hide when clicked
+$(document).ready(function(){
+  $('p').click(function(){
+    $(this).hide(); //当前DOM元素，即被点击的p
+  });
+});
+//hover 鼠标移到对象上触发一次，离开时再触发一次
+$(document).ready(function(){
+  $('p').hover(function(){
+    $(this).toggleClass('hightlight');
+  });
+});
+
+////键盘事件
+//keydown 按下时执行一次
+//keypress 按住时执行一次或多次
+$(document).ready(function(){
+  $('body').keypress(
+    function(event){
+      if (event.which == 102){alert('Fuck!')}; //只在按下F键时触发
+    }
+  );
+});
+//keyup 松开时执行一次
+
+////event对象
+//.pageX
+//
+//.pageY
+//
+//.preventDefault()
+var currentWeight = 1850;
+$(document).ready(function (){
+  $('a#weight_down').click(
+    function(event){
+      currentWeight = currentWeight - 50;
+      $('span#display').text(currentWeight);
+      event.preventDefault(); //纯点击，不链接到a#weight_down的地址
+      }
+    );
+});
+
+//.stopPropogation()
+
+
+
+////动画特效
+$('h1').toggle('slow'); //速度也可以直接填毫秒数，例如2000 
+$('h1').slideToggle(); //只有slide没有fade特效
+$('h1').fadeToggle(); //只有fade没有slide特效
+
+////AJAX 通过XMLHttpRequest来发送或接收内容
+//load
+$('span.number').load('/flights/213/gate'); //<span class='number'>动态内容</span>
+
+
 //////操作DOM元素
 //返回不带HTML标签的内容
 $('div.span7').text(); //"Simple CMS"
