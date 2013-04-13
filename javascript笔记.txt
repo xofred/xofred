@@ -270,7 +270,7 @@ $("p:first").show();
 $("p:first").toggle();
 
 //确保js在DOM全部加载后才开始执行，非常重要！
-$(documnet).ready(function(){
+$(document).ready(function(){
   $("p:first").toggle();
 })
 
