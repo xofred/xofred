@@ -1,0 +1,572 @@
+////Grammer
+///Comments
+block comments are not safe for commenting out blocks of code. For example:
+/*
+    var rm_a = /a*/.match(s);
+*/
+causes a syntax error. So, it is recommended that /* */ comments be avoided and // comments be used instead.
+
+  
+///Names
+one or more 
+  letters, 
+  digits, 
+  or underbars. 
+A name cannot be one of these reserved words:
+
+abstract
+boolean break byte
+case catch char class const continue
+debugger default delete do double
+else enum export extends
+false final finally float for function
+goto
+if implements import in instanceof int interface
+long
+native new null
+package private protected public
+return
+short static super switch synchronized
+this throw throws transient true try typeof
+var volatile void
+while with
+  
+undefined NaN Infinity  
+
+
+///Numbers
+64-bit floating point
+
+1===1.0
+true
+
+The value NaN is a number value that is the result of an operation that cannot produce a normal result. 
+NaN is not equal to any value, including itself. 
+You can detectNaNwith theisNaN(number)function.
+
+
+//Strings
+wrapped in single quotes or double quotes. 
+zero or more characters. 
+The \ (backslash) is the escape character.  
+16 bits wide.
+
+The \u convention allows for specifying character code points numerically.
+"A" === "\u0041";
+true
+
+Two strings 
+  containing exactly the same characters 
+  in the same order 
+are considered to be the same string. So:
+'c' + 'a' + 't' === 'cat';
+true
+
+
+///Statements
+
+in ONE common global namespace.
+When used inside of a function, the var statement defines the function's private variables.
+
+block 
+  is a set of statements wrapped in curly braces. 
+  Unlike many other languages, blocks in JavaScript do not create a new scope, 
+  so variables should be defined at the top of the function, not in blocks.
+
+if
+  Here are the falsy values:
+    • false
+    • null
+    • undefined
+    • The empty string '' 
+    • The number 0
+    • The number NaN
+  All other values are truthy, including true, the string 'false', and all objects.
+
+case
+  contains one or more case expressions. 
+  The case expressions need not be constants. 
+
+for
+
+for in
+for (myvar in obj) {      
+  if (obj.hasownProperty(myvar)) {
+    ... 
+  }
+}
+
+do and while
+The do statement is like the while statement 
+except that the expression is tested after(do) the block is executed instead of before(while). 
+That means that the block will always be executed at least once.
+
+return
+If a return expression is not specified, then the return value will be undefined.
+
+break
+The break statement causes the exit from a loop statement or a switch statement. 
+
+
+///Expressions
+typeof
+The values produced by typeof are 'number', 'string', 'boolean', 'undefined', 'function', and 'object'. 
+If the operand is an array or null, then the result is 'object', which is wrong. 
+
++
+The + operator adds or concatenates. If you want it to add, make sure both operands are numbers. 
+
+/
+The / operator can produce a noninteger result even if both operands are integers.
+
+&&
+The && operator produces the value of its first operand if the first operand is falsy. 
+Otherwise, it produces the value of the second operand.
+
+||
+The || operator produces the value of its first operand if the first operand is truthy.
+Otherwise, it produces the value of the second operand.
+
+
+///Literals
+object literal
+{}
+
+array literal
+[]
+
+regexp literal
+//
+
+
+
+////Objects
+An object is a container of properties, where a property has 
+  a name 
+  and a value. 
+A property name can be any string, including the empty string. 
+A property value can be any JavaScript value except for undefined.
+
+
+///Object Literals
+var empty_object = {};
+var stooge = {
+    "first-name": "Jerome",
+    "last-name": "Howard"
+};
+
+Objects can nest:
+var flight = {
+    airline: "Oceanic",
+    number: 815,
+    departure: {
+        IATA: "SYD",
+        time: "2004-09-22 14:55",
+        city: "Sydney"
+    }, 
+    arrival: {
+        IATA: "LAX",
+        time: "2004-09-23 10:42",
+        city: "Los Angeles"
+    }
+};
+
+
+///Retrieval
+stooge["first-name"]     // "Jerome"
+flight.departure.IATA    // "SYD"
+
+The undefined value is produced if an attempt is made to retrieve a nonexistent member:
+stooge["middle-name"]	// undefined
+flight.status		// undefined
+stooge["FIRST-NAME"]	// undefined
+
+The || operator can be used to fill in default values:
+var middle = stooge["middle-name"] || "(none)";
+var status = flight.status || "unknown";
+
+Attempting to retrieve values from undefined will throw a TypeError exception. 
+This can be guarded against with the && operator:
+flight.equipment			    // undefined
+flight.equipment.model			    // throw "TypeError"
+flight.equipment && flight.equipment.model  // undefined
+
+
+///Update
+If the object does not already have that property name, the object is augmented:
+stooge['middle-name'] = 'Lester';
+stooge.nickname = 'Curly';
+flight.equipment = {
+    model: 'Boeing 777'
+};
+flight.status = 'overdue';
+
+
+///Reference
+Objects are passed around by reference. They are never copied:
+
+var x = stooge;
+x.nickname = 'Curly';
+var nick = stooge.nickname;
+    // nick is 'Curly' because x and stooge
+    // are references to the same object
+var a = {}, b = {}, c = {};
+    // a, b, and c each refer to a
+    // different empty object
+a = b = c = {};
+    // a, b, and c all refer to
+    // the same empty object
+
+
+///Prototype
+//When you make a new object, you can select the object that should be its prototype. 
+//We will add a beget method to the Object function.
+
+if (typeof Object.beget !== 'function') {
+     Object.beget = function (o) {
+         var F = function () {};
+         F.prototype = o;
+         return new F();
+     }; 
+}
+var another_stooge = Object.beget(stooge);
+
+//The prototype link has no effect on updating. 
+//When we make changes to an object, the object's prototype is not touched:
+
+another_stooge['first-name'] = 'Harry';
+another_stooge['middle-name'] = 'Moses';
+another_stooge.nickname = 'Moe';
+
+//If we add a new property to a prototype, 
+//that property will immediately be visible in all of the objects that are based on that prototype:
+
+stooge.profession = 'actor';
+another_stooge.profession    // 'actor'
+
+
+///Reflection
+typeof flight.number	// 'number'
+typeof flight.status	// 'string'
+typeof flight.arrival	// 'object'
+typeof flight.manifest	// 'undefined'
+
+Some care must be taken because any property on the prototype chain can produce a value:
+typeof flight.toString    // 'function'
+typeof flight.constructor // 'function'
+
+The hasOwnProperty method does not look at the prototype chain:
+flight.hasOwnProperty('number')         // true
+flight.hasOwnProperty('constructor')    // false
+
+
+///Enumeration
+for in
+typeof
+hasOwnProperty
+
+var name;
+for (name in another_stooge) {
+    if (typeof another_stooge[name] !== 'function') {
+        document.writeln(name + ': ' + another_stooge[name]);
+} }
+
+用 for 和数组确保顺序
+var i;
+var properties = [
+    'first-name',
+    'middle-name',
+    'last-name',
+    'profession'
+];
+for (i = 0; i < properties.length; i += 1) {
+    document.writeln(properties[i] + ': ' +
+            another_stooge[properties[i]]);
+}
+
+
+///Delete
+another_stooge.nickname    // 'Moe'
+// Remove nickname from another_stooge, revealing
+// the nickname of the prototype.
+delete another_stooge.nickname;
+another_stooge.nickname    // 'Curly'
+
+
+///Global Abatement
+One way to minimize the use of global variables is to create a single global variable for your application:
+
+var MYAPP = {};
+
+That variable then becomes the container for your application:
+
+MYAPP.stooge = {
+    "first-name": "Joe",
+    "last-name": "Howard"
+};
+MYAPP.flight = {
+    airline: "Oceanic",
+    number: 815,
+    departure: {
+        IATA: "SYD",
+        time: "2004-09-22 14:55",
+        city: "Sydney"
+}, arrival: {
+        IATA: "LAX",
+        time: "2004-09-23 10:42",
+        city: "Los Angeles"
+} };
+
+
+
+////Functions
+
+///Function Literal
+
+// Create a variable called add and store a function
+// in it that adds two numbers.
+var add = function (a, b) { return a + b;
+}; 
+
+///Invocation
+
+//The Method Invocation Pattern
+//
+// Create myObject. It has a value and an increment
+// method. The increment method takes an optional
+// parameter. If the argument is not a number, then 1
+// is used as the default.
+var myObject = {
+    value: 0,
+    increment: function (inc) {
+        this.value += typeof inc === 'number' ? inc : 1;
+    }
+};
+myObject.increment(  );
+document.writeln(myObject.value); // 1
+myObject.increment(2);
+document.writeln(myObject.value); // 3
+
+//The Function Invocation Pattern
+//
+var sum = add(3, 4);    // sum is 7
+
+// defines a variable and assigns it the value of this
+// Augment myObject with a double method.
+myObject.double = function (  ) {
+    var that = this;    // Workaround.
+    var helper = function (  ) {
+        that.value = add(that.value, that.value);
+};
+    helper(  );    // Invoke helper as a function.
+};
+// Invoke double as a method.
+myObject.double(  );
+document.writeln(myObject.getValue(  ));    // 6
+
+//The Constructor Invocation Pattern ( not recommended )
+//
+// Create a constructor function called Quo.
+// It makes an object with a status property.
+var Quo = function (string) {
+    this.status = string;
+};
+// Give all instances of Quo a public method
+// called get_status.
+Quo.prototype.get_status = function (  ) {
+    return this.status;
+};
+// Make an instance of Quo.
+var myQuo = new Quo("confused");
+document.writeln(myQuo.get_status(  ));  // confused
+
+//The Apply Invocation Pattern
+//
+// Make an array of 2 numbers and add them.
+var array = [3, 4];
+var sum = add.apply(null, array);    // sum is 7
+// Make an object with a status member.
+var statusObject = {
+    status: 'A-OK'
+};
+// statusObject does not inherit from Quo.prototype,
+// but we can invoke the get_status method on
+// statusObject even though statusObject does not have
+// a get_status method.
+var status = Quo.prototype.get_status.apply(statusObject);
+    // status is 'A-OK'
+
+//Arguments ( not a particularly useful pattern )
+//
+// Make a function that adds a lot of stuff.
+// Note that defining the variable sum inside of
+// the function does not interfere with the sum
+// defined outside of the function. The function
+// only sees the inner one.
+var sum = function (  ) {
+    var i, sum = 0;
+    for (i = 0; i < arguments.length; i += 1) {
+        sum += arguments[i]; // arguments has a length property, but it lacks all of the array methods.
+}
+    return sum;
+};
+document.writeln(sum(4, 8, 15, 16, 23, 42)); // 108
+
+//Return
+//
+//The return statement can be used to cause the function to return early. When return is executed, the function returns immediately without executing the remaining statements.
+//
+//A function always returns a value. If the return value is not specified, then undefined is returned.
+//
+//If the function was invoked with the new prefix and the return value is not an object, then this (the new object) is returned instead.
+
+var add = function (a, b) {
+    if (typeof a !== 'number' || typeof b !== 'number') {
+        throw {
+            name: 'TypeError',
+            message: 'add needs numbers'
+} }
+return a + b; }
+
+add(1,2); // 3
+add(1,'b'); // object defined in throw as above
+
+// Make a try_it function that calls the new add
+// function incorrectly.
+var try_it = function (  ) {
+    try {
+        add("seven");
+    } catch (e) {
+        document.writeln(e.name + ': ' + e.message);
+    }
+}
+try_it( ); // TypeError: add needs numbers
+
+//Augmenting Types
+//
+//by augmenting Function.prototype, we can make a method available to all functions:
+Function.prototype.method = function (name, func) {
+    this.prototype[name] = func;
+    return this;
+};
+
+//adding an integer method to Number.prototype
+Number.method('integer', function (  ) {
+    return Math[this < 0 ? 'ceil' : 'floor'](this);
+});
+document.writeln((-10 / 3).integer(  ));  // -3
+
+//JavaScript lacks a method that removes spaces from the ends of a string. That is an easy oversight to fix
+String.method('trim', function (  ) {
+    return this.replace(/^\s+|\s+$/g, '');
+});
+document.writeln('"' + "   neat   ".trim(  ) + '"'); // "neat"
+
+//The prototypes of the basic types are public structures, so care must be taken when mixing libraries. One defensive technique is to add a method only if the method is known to be missing:
+//
+// Add a method conditionally.
+Function.prototype.method = function (name, func) {
+    if (!this.prototype[name]) {
+        this.prototype[name] = func;
+    }
+};
+
+//Recursion
+var hanoi = function (disc, src, aux, dst) {
+  if (disc > 0) {
+    hanoi(disc - 1, src, dst, aux);
+    document.writeln( 'Move disc ' + disc +
+	' from ' + src + ' to ' + dst + "<br />");
+    hanoi(disc - 1, aux, src, dst);
+  }
+}
+hanoi(3, 'Src', 'Aux', 'Dst');
+
+//函数作用域
+//JavaScript的block是不分作用域的。所以应在函数最开头定义好所有要用到的变量。
+//但函数是有作用域的。函数里面定义的参数和变量在函数内部全局可用(除了this和arguments)，对外不可见。
+//举例：
+var foo = function (  ) {
+    var a = 3, b = 5;
+    var bar = function (  ) {
+        var b = 7, c = 11;
+// At this point, a is 3, b is 7, and c is 11
+        a += b + c;
+// At this point, a is 21, b is 7, and c is 11
+    };
+// At this point, a is 3, b is 5, and c is not defined
+    bar(  );
+// At this point, a is 21, b is 5
+};
+
+//函数闭包
+var fade = function (node) {
+  var level = 1;
+  var step = function (  ) {
+    var hex = level.toString(16);
+    node.style.backgroundColor = '#FFFF' + hex + hex;
+    if (level < 15) {
+      level += 1;
+      setTimeout(step, 100);
+    }
+  };
+  setTimeout(step, 100);
+};
+fade(document.body);
+
+var add_the_handlers = function (nodes) {
+  var i;
+  for (i = 0; i < nodes.length; i += 1) {
+    nodes[i].onclick = function (i) {
+      return function (e) {
+	alert(i);
+      }; 
+    }
+    (i);
+  } 
+};
+
+
+//Callbacks
+//用于异步通信
+
+
+//Module
+//参照前文：by augmenting Function.prototype, we can make a method available to all functions:
+Function.prototype.method = function (name, func) {
+    this.prototype[name] = func;
+    return this;
+};
+
+String.method('deentityify', function (  ) {
+  // The entity table. It maps entity names to
+  // characters.
+  var entity = {
+    quot: '"',
+    lt:   '<',
+    gt: '>' 
+  };
+  // Return the deentityify method.
+  return function (  ) {
+    // This is the deentityify method. It calls the string
+    // replace method, looking for substrings that start
+    // with '&' and end with ';'. If the characters in
+    // between are in the entity table, then replace the
+    // entity with the character from the table. It uses
+    // a regular expression (Chapter 7).
+    return this.replace(/&([^&;]+);/g,
+      function (a, b) {
+	var r = entity[b];
+	return typeof r === 'string' ? r : a;
+      }
+    ); 
+  };
+}( ));
+//Notice the last line. We immediately invoke the function we just made with the ( ) operator. That invocation creates and returns the function that becomes the deentityify method.
+document.writeln(
+    '&lt;&quot;&gt;'.deentityify(  )
+);  // <">
+
+
+//叠用
+

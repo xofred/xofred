@@ -1,3 +1,28 @@
+####factory_girl
+#继承
+#例如:male_user，:female_user，只是sex属性不同，其他共用:user
+factory :user do
+  nickname "Obama" 
+
+  factory :male_user do
+    sex "male" 
+  end
+
+  factory :female_user do
+    sex "female" 
+  end 
+end
+
+male_user = create(:male_user)
+male_user.nickname    # => "Obama"
+male_user.sex	      # => "male" 
+
+female_user = create(:female_user)
+female_user.nickname  # => "Obama"
+female_user.sex	      # => "female" 
+
+
+
 ####each_with_index
 #遍历之余还可提供index,注意index从0开始自增
 
@@ -9,10 +34,103 @@
 <%= paginate @events %>
 
 
-####多对多的两种实现
-#假如除了双方id还需要储存额外信息，或者需要对多对多关系进行增删改操作，适合用has_many :through实现（新建一个多对多model）
-#不需要的话用has_and_belongs_to即可
+####关系
+###一对一
+##belongs_to
+class Order < ActiveRecord::Base
+  belongs_to :customer #注意是单数
+end
 
+##has_one
+class Supplier < ActiveRecord::Base
+  has_one :account
+end
+
+##多对多的两种实现
+#假如除了双方id还需要储存额外信息，或者需要对多对多关系进行关联增删改操作，适合用has_many :through实现（新建一个多对多model）
+class Physician < ActiveRecord::Base
+  has_many :appointments
+  has_many :patients, through: :appointments
+end
+#中间表
+class Appointment < ActiveRecord::Base
+  belongs_to :physician
+  belongs_to :patient
+end
+
+class Patient < ActiveRecord::Base
+  has_many :appointments
+  has_many :physicians, through: :appointments
+end
+
+#又或者多层一对多关系，最上层模型通过has_many :through可直接获取最底层模型
+class Document < ActiveRecord::Base
+  has_many :sections
+  has_many :paragraphs, through: :sections
+end
+
+class Section < ActiveRecord::Base
+  belongs_to :document
+  has_many :paragraphs
+end
+
+class Paragraph < ActiveRecord::Base
+  belongs_to :section
+end
+#获取数据
+@document.paragraphs
+
+#不需要的话多对多用has_and_belongs_to_many即可
+#但数据库仍需要中间表
+
+##has_one :through
+#类似has_many :through，用于最上层模型直接获取最底层模型
+class Supplier < ActiveRecord::Base
+  has_one :account
+  has_one :account_history, through: :account
+end
+
+class Account < ActiveRecord::Base
+  belongs_to :supplier
+  has_one :account_history
+end
+
+class AccountHistory < ActiveRecord::Base
+  belongs_to :account
+end
+
+##polymorphic
+#如一个模型同多个模型有关系
+class Picture < ActiveRecord::Base
+  belongs_to :imageable, polymorphic: true
+end
+
+class Employee < ActiveRecord::Base
+  has_many :pictures, as: :imageable
+end
+
+class Product < ActiveRecord::Base
+  has_many :pictures, as: :imageable
+end
+#获取数据
+@employee.pictures
+@product.pictures
+
+##自连接
+class Employee < ActiveRecord::Base
+  has_many :subordinates, class_name: "Employee",
+    foreign_key: "manager_id"
+
+  belongs_to :manager, class_name: "Employee"
+end
+#获取数据
+@employee.managers
+@employee.subordinates
+
+
+##关于关系的技巧和注意
+#注意：关系名不要和ActiveRecord::Base的实例方法名一样
+#
 
 ####路由的path和url
 #例如首页是

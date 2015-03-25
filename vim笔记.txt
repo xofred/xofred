@@ -1,3 +1,9 @@
+用macvim取代系统自带vim
+brew install macvim --override-system-vim
+
+创建一个会话文件	:mksession vimbook.vim
+恢复到此前的会话状态	:source vimbook.vim
+
 查看文件编码		:set fileencoding
 
 格式化缩进		=G(当前行至最后，例如gg=G就是开头至最后)			
