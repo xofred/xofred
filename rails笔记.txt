@@ -1,3 +1,19 @@
+# Applying a default scope
+class Client < ActiveRecord::Base
+  default_scope { where("removed_at IS NULL")  }
+end
+
+
+# rails4 confirm对话框
+<%= button_to "Delete Image", { action: "delete", id: @image.id },
+                                method: :delete, data: { confirm: "Are you sure?" } %>
+# => "<form method="post" action="/images/delete/1" class="button_to">
+#      <input type="hidden" name="_method" value="delete" />
+#      <input data-confirm='Are you sure?' value="Delete Image" type="submit" />
+#      <input name="authenticity_token" type="hidden" value="10f2163b45388899ad4d5ae948988266befcb6c3d1b2451cf657a0c293d605a6"/>
+#    </form>"
+
+
 ####factory_girl
 #继承
 #例如:male_user，:female_user，只是sex属性不同，其他共用:user
